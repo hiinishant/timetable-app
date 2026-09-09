@@ -4,16 +4,16 @@ A simple and lightweight timetable app for students.
 
 ##  Download
 
-[Download TimeTable APK](YOUR_RELEASE_LINK)
+[Download TimeTable APK]((https://github.com/hiinishant/timetable-app/releases/tag/v1.0.0))
 
-## ✨ Features
+##  Features
 
-- 📅 View your timetable
-- 🔔 Class reminders
-- 📚 Manage subjects
-- 📤 Export timetable
-- 📥 Import timetable JSON
-- 🌙 Dark-themed interface
+-  View your timetable
+-  Class reminders
+-  Manage subjects
+-  Export timetable
+-  Import timetable JSON
+-  Dark-themed interface
 
 ##  Built With
 
