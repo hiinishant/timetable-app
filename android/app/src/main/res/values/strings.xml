@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TimeTable</string>
+    <string name="title_activity_main">TimeTable</string>
+    <string name="package_name">com.nishant.TimeTable</string>
+    <string name="custom_url_scheme">com.nishant.TimeTable</string>
+</resources>

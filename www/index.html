@@ -1,0 +1,2907 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy: #102b43;
+            --navy-2: #173b58;
+            --green: #147052;
+            --green-2: #0f5d43;
+            --gold: #c69a4d;
+            --cream: #f6f4ed;
+            --paper: #fff;
+            --ink: #17232d;
+            --muted: #66747e;
+            --line: #dfe3df;
+            --soft: #edf2ee;
+            --shadow: 0 20px 55px rgba(16, 43, 67, .11);
+            --radius: 20px;
+            --ease: cubic-bezier(.2, .8, .2, 1);
+
+            --bg-color: var(--cream);
+            --card-bg: var(--paper);
+            --card-hover: #fbfcfa;
+            --border-color: var(--line);
+            --text-primary: var(--ink);
+            --text-secondary: var(--muted);
+            --text-muted: #7b878e;
+            --accent-color: var(--green);
+            --accent-hover: var(--green-2);
+            --success-color: var(--green);
+            --font-main: 'Inter', sans-serif;
+            --transition: all 0.25s var(--ease);
+            --max-width: 800px;
+            --shadow-sm: 0 8px 24px rgba(16, 43, 67, .05);
+
+            --card-gradient: linear-gradient(110deg, var(--paper) 0%, var(--paper) 58%, rgba(237, 242, 238, 0.78) 82%, rgba(246, 244, 237, 0.95) 100%);
+            --card-gradient-now: linear-gradient(110deg, var(--paper) 0%, var(--paper) 54%, rgba(237, 242, 238, 0.82) 78%, rgba(20, 112, 82, 0.08) 100%);
+            --card-gradient-hover: linear-gradient(110deg, var(--paper) 0%, var(--paper) 52%, rgba(237, 242, 238, 0.88) 78%, rgba(198, 154, 77, 0.08) 100%);
+        }
+
+        body[data-theme="dark"] {
+            --navy: #eaf1f8;
+            --navy-2: #cfe0ee;
+            --green: #3fbf94;
+            --green-2: #58d6ab;
+            --gold: #e0b869;
+            --bg-color: #0d1418;
+            --card-bg: #131d24;
+            --card-hover: #17232b;
+            --border-color: #223038;
+            --text-primary: #eef2f0;
+            --text-secondary: #9aa8ae;
+            --text-muted: #7c8a90;
+            --accent-color: #3fbf94;
+            --accent-hover: #58d6ab;
+            --success-color: #3fbf94;
+            --shadow-sm: 0 8px 24px rgba(0, 0, 0, .35);
+
+            --card-gradient: linear-gradient(110deg, var(--card-bg) 0%, var(--card-bg) 58%, rgba(63, 191, 148, 0.05) 82%, rgba(224, 184, 105, 0.04) 100%);
+            --card-gradient-now: linear-gradient(110deg, var(--card-bg) 0%, var(--card-bg) 54%, rgba(63, 191, 148, 0.10) 78%, rgba(63, 191, 148, 0.14) 100%);
+            --card-gradient-hover: linear-gradient(110deg, var(--card-bg) 0%, var(--card-bg) 52%, rgba(63, 191, 148, 0.08) 78%, rgba(224, 184, 105, 0.08) 100%);
+        }
+
+        body[data-theme="dark"] header {
+            background-color: rgba(13, 20, 24, 0.9);
+        }
+
+        body[data-theme="dark"] .card.status-now {
+            background: var(--card-gradient-now);
+            box-shadow: 0 12px 34px rgba(63, 191, 148, .14);
+        }
+
+        button,
+        a {
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        button:focus,
+        button:active,
+        a:focus,
+        a:active {
+            outline: none;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px;
+            transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            padding: 16px 0;
+            transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease);
+        }
+
+        section {
+            margin-top: 48px;
+        }
+
+        .section-header {
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 12px;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card:hover {
+            background-color: var(--card-hover);
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+
+        body[data-theme="dark"] .card:hover {
+            border-color: #33454f;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+
+        .card-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-status-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .card-body h4 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .card-body p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .countdown-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .card.status-now {
+            border-color: var(--accent-color);
+            background-color: rgba(79, 70, 229, 0.06);
+        }
+
+        .card.status-now .card-status-badge {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .card.status-now .countdown-text {
+            color: var(--accent-color);
+        }
+
+        .card.status-now .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .card.status-next .card-status-badge {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .card.status-completed {
+            opacity: 0.6;
+        }
+
+        .card.status-completed:hover {
+            opacity: 1;
+        }
+
+        .card.status-completed .card-status-badge {
+            color: var(--text-muted);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.35);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 4px rgba(79, 70, 229, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            background-color: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .week-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            scrollbar-width: none;
+        }
+
+        .week-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .tab-btn:hover {
+            background-color: var(--card-hover);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background-color: rgba(79, 70, 229, 0.08);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .week-content {
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .week-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .subject-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .subject-item {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .add-schedule-card {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            font: inherit;
+            min-height: 0;
+            height: auto;
+            padding: 20px;
+            border-style: dashed;
+            color: var(--text);
+        }
+
+        .add-schedule-card .add-schedule-icon {
+            font-size: 17px;
+            line-height: 1;
+        }
+
+        .add-schedule-card .subject-name {
+            font-size: 11px;
+            line-height: 1.1;
+        }
+
+        .add-schedule-card .subject-code {
+            display: none;
+        }
+
+        .custom-subject-item {
+            position: relative;
+            padding-right: 52px;
+        }
+
+        .remove-schedule-btn {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            background: rgba(255,255,255,.03);
+            color: var(--text-secondary);
+            font: 700 14px var(--font-main);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .remove-schedule-btn:hover {
+            color: #ff7d7d;
+            border-color: rgba(255,125,125,.35);
+            background: rgba(255,125,125,.08);
+        }
+
+        .add-schedule-card:hover,
+        .remove-schedule-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .remove-schedule-btn:hover {
+            transform: translateY(-50%);
+        }
+
+        .add-schedule-icon {
+            font-size: 1.7rem;
+            line-height: 1;
+            color: var(--green);
+            margin-bottom: 3px;
+        }
+
+        .subject-code {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .subject-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .header-title h1,
+        .section-header h3,
+        .card-body h4,
+        .subject-name {
+            color: var(--navy);
+        }
+
+        .header-title p,
+        .header-date,
+        .card-body p,
+        .subject-code {
+            color: var(--muted);
+        }
+
+        .section-header h2 {
+            color: var(--green);
+        }
+
+        .card,
+        .subject-item {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card:hover,
+        .subject-item:hover {
+            box-shadow: 0 14px 32px rgba(16, 43, 67, .09);
+        }
+
+        body[data-theme="dark"] .card:hover,
+        body[data-theme="dark"] .subject-item:hover {
+            box-shadow: 0 14px 32px rgba(0, 0, 0, .45);
+        }
+
+        .card.status-now {
+            box-shadow: 0 12px 34px rgba(20, 112, 82, .10);
+        }
+
+        .subject-item {
+            transition: var(--transition);
+        }
+
+        .empty-state {
+            background-color: var(--paper);
+            border-color: var(--line);
+        }
+
+        body[data-theme="dark"] .empty-state {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        .card,
+        .subject-item {
+            background: var(--card-gradient);
+        }
+
+        .card.status-now {
+            background: var(--card-gradient-now);
+        }
+
+        .subject-item:hover,
+        .card:hover {
+            background: var(--card-gradient-hover);
+        }
+
+
+        .subject-details { font-size: .76rem; color: var(--text-secondary); line-height: 1.4; }
+        .empty-state-rich { display:flex; flex-direction:column; align-items:center; gap:7px; }
+        .empty-state-rich strong { color:var(--text-primary); font-size:14px; }
+        .empty-state-rich > span { max-width:420px; }
+        .empty-state-actions { display:flex; gap:8px; margin-top:7px; flex-wrap:wrap; justify-content:center; }
+        .empty-action { cursor:pointer; }
+
+        @media (max-width: 599px) {}
+
+        @media (min-width: 600px) {
+            .subject-list {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        body {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 88px;
+        }
+
+        body.app-ready {
+            overflow-x: hidden;
+        }
+
+        body::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            display: none;
+        }
+
+        .app-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: color-mix(in srgb, var(--bg-color) 94%, transparent);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .app-topbar .container {
+            min-height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .app-brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 7px 20px rgba(20, 112, 82, .22);
+            flex: 0 0 auto;
+        }
+
+        .app-brand-icon svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .app-brand-text {
+            min-width: 0;
+        }
+
+        .app-brand-text strong {
+            display: block;
+            font-size: 15px;
+            line-height: 1.15;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .app-brand-text span {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .profile-top-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 0 0 auto;
+        }
+
+        .profile-top-btn:hover {
+            transform: translateY(-1px);
+            border-color: var(--accent-color);
+        }
+
+        .profile-top-btn svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .app-page {
+            display: none;
+            animation: pageIn .22s ease;
+            will-change: transform, opacity;
+        }
+
+        .app-page.active {
+            display: block;
+        }
+
+        .app-page.swipe-enter-left {
+            animation: swipeEnterLeft .24s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        .app-page.swipe-enter-right {
+            animation: swipeEnterRight .24s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        @keyframes pageIn {
+            from {
+                opacity: .2;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes swipeEnterLeft {
+            from {
+                opacity: .45;
+                transform: translateX(48px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes swipeEnterRight {
+            from {
+                opacity: .45;
+                transform: translateX(-48px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .app-bottom-nav {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            background: color-mix(in srgb, var(--card-bg) 96%, transparent);
+            border-top: 1px solid var(--border-color);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .app-bottom-nav-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .app-nav-btn {
+            border: 0;
+            background: transparent;
+            color: var(--text-secondary);
+            min-height: 58px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font: 600 11px var(--font-main);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .app-nav-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+        }
+
+        .app-nav-btn.active {
+            color: var(--accent-color);
+            background: rgba(20, 112, 82, .09);
+        }
+
+        body[data-theme="dark"] .app-nav-btn.active {
+            background: rgba(63, 191, 148, .10);
+        }
+
+        .page-inner {
+            padding-top: 22px;
+        }
+
+        .today-hero {
+            padding: 4px 0 20px;
+        }
+
+        .today-hero h1 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: clamp(25px, 7vw, 34px);
+            letter-spacing: -.7px;
+        }
+
+        .today-hero p {
+            margin: 7px 0 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .today-hero .date-pill {
+            display: inline-flex;
+            margin-top: 13px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: var(--soft);
+            color: var(--accent-color);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .page-section .section-header {
+            margin-top: 0;
+        }
+
+        .week-tabs {
+            position: sticky;
+            top: 66px;
+            z-index: 50;
+            padding: 8px 0;
+            background: var(--bg-color);
+        }
+
+        .profile-page {
+            padding-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .profile-hero {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 20px 0 22px;
+        }
+
+        .profile-avatar {
+            width: 62px;
+            height: 62px;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            background: var(--accent-color);
+            color: #fff;
+            font-size: 22px;
+            font-weight: 800;
+            box-shadow: 0 10px 25px rgba(20, 112, 82, .20);
+            flex: 0 0 auto;
+        }
+
+        .profile-hero h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .profile-hero p {
+            margin: 5px 0 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .settings-title {
+            padding: 16px 17px 9px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            font-weight: 800;
+            color: var(--text-secondary);
+        }
+
+        .setting-row {
+            min-height: 62px;
+            padding: 12px 17px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .setting-info {
+            min-width: 0;
+        }
+
+        .setting-info strong {
+            display: block;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .setting-info span {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .profile-input {
+            width: 150px;
+            max-width: 45%;
+            padding: 9px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            font: 600 13px var(--font-main);
+        }
+
+        .profile-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .notification-timing-row.disabled {
+            opacity: .48;
+        }
+
+        .notification-timing-row.disabled .switch-slider {
+            cursor: not-allowed;
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            flex: 0 0 auto;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: #7b878e;
+            cursor: pointer;
+            transition: .22s ease;
+        }
+
+        .switch-slider:before {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, .18);
+            transition: .22s ease;
+        }
+
+        .switch input:checked+.switch-slider {
+            background: var(--accent-color);
+        }
+
+        .switch input:checked+.switch-slider:before {
+            transform: translateX(20px);
+        }
+
+        .profile-note {
+            margin-top: 8px;
+            padding: 13px 14px;
+            border-radius: 14px;
+            background: var(--soft);
+            color: var(--text-secondary);
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .subject-item {
+            position: relative;
+        }
+
+        .subject-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .subject-action-btn,
+        .profile-action-btn {
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font: 600 12px var(--font-main);
+            transition: var(--transition);
+        }
+
+        .subject-action-btn:hover,
+        .profile-action-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .profile-action-btn {
+            flex: 0 0 auto;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(0,0,0,.48);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .modal-backdrop.open { display: flex; }
+
+        .timetable-modal {
+            width: min(100%, 520px);
+            max-height: min(88vh, 760px);
+            overflow: auto;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 22px;
+            box-shadow: 0 25px 70px rgba(0,0,0,.32);
+            padding: 20px;
+        }
+
+        .modal-header {
+            display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px;
+        }
+        .modal-header h3 { font-size:20px; }
+        .modal-close {
+            width:34px; height:34px; border:1px solid var(--border-color); border-radius:50%;
+            color:var(--text-primary); background:var(--bg-color); font-size:20px;
+        }
+        .form-group { margin-bottom:13px; }
+        .form-group label { display:block; margin-bottom:6px; font-size:12px; font-weight:700; color:var(--text-secondary); }
+        .form-control {
+            width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:11px;
+            outline:none; background:var(--bg-color); color:var(--text-primary); font:500 13px var(--font-main);
+        }
+        .form-control:focus { border-color:var(--accent-color); }
+        .day-picker { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; }
+        .day-choice input { position:absolute; opacity:0; pointer-events:none; }
+        .day-choice span {
+            display:block; text-align:center; padding:9px 5px; border:1px solid var(--border-color);
+            border-radius:10px; font-size:11px; font-weight:700; color:var(--text-secondary); cursor:pointer;
+        }
+        .day-choice input:checked + span { background:rgba(63,191,148,.12); border-color:var(--accent-color); color:var(--accent-color); }
+        .repeat-options { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+        .repeat-option input { position:absolute; opacity:0; pointer-events:none; }
+        .repeat-option span { display:block; padding:10px; text-align:center; border:1px solid var(--border-color); border-radius:10px; font-size:11px; font-weight:700; color:var(--text-secondary); cursor:pointer; }
+        .repeat-option input:checked + span { background:rgba(63,191,148,.12); border-color:var(--accent-color); color:var(--accent-color); }
+        .modal-actions { display:flex; gap:9px; margin-top:18px; }
+        .modal-btn { flex:1; padding:11px 14px; border-radius:11px; font:700 13px var(--font-main); border:1px solid var(--border-color); }
+        .modal-btn.primary { background:var(--accent-color); color:#fff; border-color:var(--accent-color); }
+        .modal-btn.secondary { background:var(--bg-color); color:var(--text-primary); }
+        .time-fields { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+        .time-control {
+            width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:11px;
+            background:var(--bg-color); color:var(--text-primary); font:600 13px var(--font-main);
+            text-align:left; cursor:pointer; transition:var(--transition);
+        }
+        .time-control:hover, .time-control.active { border-color:var(--accent-color); box-shadow:0 0 0 3px rgba(63,191,148,.08); }
+        .time-picker-popover {
+            display:none; margin:-4px 0 13px; padding:12px; border:1px solid var(--border-color);
+            border-radius:14px; background:var(--bg-color); box-shadow:0 14px 35px rgba(0,0,0,.22);
+        }
+        .time-picker-popover.open { display:block; }
+        .time-picker-title { font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:9px; }
+        .time-picker-columns { display:grid; grid-template-columns:1fr 1fr .9fr; gap:7px; }
+        .time-picker-column { max-height:142px; overflow-y:auto; padding:2px; border-radius:10px; background:var(--card-bg); border:1px solid var(--border-color); }
+        .time-picker-option {
+            display:block; width:100%; border:0; border-radius:8px; padding:8px 4px; margin:1px 0;
+            background:transparent; color:var(--text-secondary); font:700 12px var(--font-main); cursor:pointer;
+        }
+        .time-picker-option:hover, .time-picker-option.selected { background:rgba(63,191,148,.12); color:var(--accent-color); }
+        .time-picker-actions { display:flex; gap:7px; margin-top:9px; }
+        .time-picker-actions button { flex:1; padding:9px; border-radius:9px; font:700 11px var(--font-main); border:1px solid var(--border-color); cursor:pointer; }
+        .time-picker-cancel { background:var(--card-bg); color:var(--text-primary); }
+        .time-picker-done { background:var(--accent-color); color:#fff; border-color:var(--accent-color) !important; }
+        .subject-schedule-list { margin-top:10px; display:grid; gap:7px; }
+        .subject-schedule-row { padding:9px 10px; border:1px solid var(--border-color); border-radius:11px; font-size:11px; color:var(--text-secondary); display:flex; justify-content:space-between; gap:10px; }
+        .subject-schedule-row button { color:#c75c5c; font-size:11px; font-weight:700; }
+        @media (max-width:520px) { .day-picker { grid-template-columns:repeat(3,1fr); } }
+
+        @media (max-width: 520px) {
+            .app-topbar .container {
+                min-height: 62px;
+            }
+
+            .week-tabs {
+                top: 62px;
+            }
+
+            .profile-input {
+                max-width: 48%;
+            }
+        }
+    </style>
+
+    <style id="temporary-toast-style">
+        .temporary-toast {
+            position: fixed;
+            left: 50%;
+            top: calc(env(safe-area-inset-top, 0px) + 16px);
+            transform: translate(-50%, -18px);
+            z-index: 9999;
+            max-width: min(90vw, 520px);
+            padding: 12px 18px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            background: rgba(18, 25, 29, .96);
+            color: #eaf4f1;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, .28);
+            font-size: 14px;
+            line-height: 1.4;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+        }
+
+        .temporary-toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+
+        @media (max-width: 600px) {
+            .temporary-toast {
+                top: calc(env(safe-area-inset-top, 0px) + 12px);
+                width: calc(100vw - 32px);
+                max-width: none;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+
+</head>
+
+<body class="app-ready">
+
+    <header class="app-topbar">
+        <div class="container">
+            <div class="app-brand">
+                <div class="app-brand-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                        <path d="M8 2v4M16 2v4M3 9h18"></path>
+                        <path d="M8 13h2M14 13h2M8 17h2"></path>
+                    </svg>
+                </div>
+                <div class="app-brand-text">
+                    <strong id="app-user-title">Timetable</strong>
+                    <span id="app-user-subtitle">No timetable added</span>
+                </div>
+            </div>
+            <button class="profile-top-btn" id="top-profile-btn" type="button" aria-label="Open profile">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21a8 8 0 0 1 16 0"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <section class="app-page active" id="page-today">
+            <div class="page-inner">
+                <div class="today-hero">
+                    <h1>Today</h1>
+                    <p id="today-name-display" aria-hidden="true"></p>
+                    <span class="date-pill" id="current-date-display">Loading...</span>
+                </div>
+                <div id="today-classes-container"></div>
+            </div>
+        </section>
+
+        <section class="app-page" id="page-week">
+            <div class="page-inner">
+                <div class="section-header">
+                    <h2>Weekly Timetable</h2>
+                    <h3 id="week-heading">No timetable yet</h3>
+                </div>
+                <div class="week-tabs" id="week-tabs-container"></div>
+                <div id="week-content-container"></div>
+            </div>
+        </section>
+
+        <section class="app-page" id="page-subjects">
+            <div class="page-inner">
+                <div class="section-header">
+                    <h2>Subjects</h2>
+                    <h3 id="subjects-heading">Add a timetable to see subjects</h3>
+                </div>
+                <div class="subject-list" id="subject-list-container"></div>
+            </div>
+        </section>
+
+        <section class="app-page profile-page" id="page-profile">
+            <div class="page-inner">
+                <div class="profile-hero">
+                    <div class="profile-avatar" id="profile-avatar">N</div>
+                    <div>
+                        <h1 id="profile-heading">My Profile</h1>
+                        <p>Edit your details and app preferences</p>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-title">Student details</div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Name</strong>
+                            <span>Shown on your profile</span>
+                        </div>
+                        <input class="profile-input" id="profile-name" type="text" maxlength="40"
+                            placeholder="Your name">
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Roll number</strong>
+                            <span>Your student roll number</span>
+                        </div>
+                        <input class="profile-input" id="profile-roll" type="text" maxlength="30"
+                            placeholder="Roll number">
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-title">Timetable</div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Import Timetable JSON</strong>
+                            <span>Import a .json timetable file</span>
+                        </div>
+                        <button class="profile-action-btn" id="import-timetable-btn" type="button">Import</button>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Export Timetable JSON</strong>
+                            <span>Save your complete timetable as a backup</span>
+                        </div>
+                        <button class="profile-action-btn" id="export-timetable-btn" type="button">Export</button>
+                    </div>
+                    <input id="timetable-json-input" type="file" accept=".json,application/json" hidden>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-title">Notifications &amp; appearance</div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Class notifications</strong>
+                            <span>Get reminders before your classes</span>
+                        </div>
+                        <label class="switch" aria-label="Toggle class notifications">
+                            <input type="checkbox" id="notification-toggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row notification-timing-row">
+                        <div class="setting-info">
+                            <strong>10 minutes before</strong>
+                            <span>Remind me 10 minutes before class</span>
+                        </div>
+                        <label class="switch" aria-label="Toggle 10 minute class reminder">
+                            <input type="checkbox" id="notification-10-toggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row notification-timing-row">
+                        <div class="setting-info">
+                            <strong>5 minutes before</strong>
+                            <span>Remind me 5 minutes before class</span>
+                        </div>
+                        <label class="switch" aria-label="Toggle 5 minute class reminder">
+                            <input type="checkbox" id="notification-5-toggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <div class="setting-info">
+                            <strong>Dark mode</strong>
+                            <span>Switch between day and night appearance</span>
+                        </div>
+                        <label class="switch" aria-label="Toggle dark mode">
+                            <input type="checkbox" id="profile-theme-toggle">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="app-bottom-nav" aria-label="Main navigation">
+        <div class="app-bottom-nav-inner">
+            <button class="app-nav-btn active" data-page="today" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+                    <path d="M8 2v4M16 2v4M3 9h18"></path>
+                </svg>
+                <span>Today</span>
+            </button>
+            <button class="app-nav-btn" data-page="week" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19V5M4 19h16"></path>
+                    <path d="M8 15l3-4 3 2 5-7"></path>
+                </svg>
+                <span>Week</span>
+            </button>
+            <button class="app-nav-btn" data-page="subjects" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"></path>
+                    <path d="M4 5.5v15M8 7h8M8 11h8"></path>
+                </svg>
+                <span>Subjects</span>
+            </button>
+            <button class="app-nav-btn" data-page="profile" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="4"></circle>
+                    <path d="M4 21a8 8 0 0 1 16 0"></path>
+                </svg>
+                <span>Me</span>
+            </button>
+        </div>
+    </nav>
+    <script>
+        const APP_DATA_VERSION = 5;
+        const WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        const daysOfWeek = ["Sunday", ...WEEK_DAYS];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        let baseTimetable = createEmptyTimetable();
+        let timetable = createEmptyTimetable();
+        let customSchedules = [];
+        let subjectOverrides = {};
+        let subjectCatalog = {};
+        let timetableMeta = {};
+
+        function createEmptyTimetable() {
+            return WEEK_DAYS.reduce((acc, day) => {
+                acc[day] = [];
+                return acc;
+            }, { Sunday: [] });
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+        }
+
+        function getInitials(name) {
+            const clean = String(name || '').trim();
+            if (!clean) return 'N';
+            return clean.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+        }
+
+        function hasScheduleData() {
+            return Object.values(timetable).some(items => Array.isArray(items) && items.length);
+        }
+
+        function getCurrentDateTimeInfo() {
+            const now = new Date();
+            const dayName = daysOfWeek[now.getDay()];
+            const dateStr = `${dayName}, ${now.getDate()} ${months[now.getMonth()]}`;
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            return { dayName, dateStr, currentMinutes };
+        }
+
+        function parseTime(timeStr) {
+            const raw = String(timeStr || '').trim().toUpperCase();
+            if (!raw) return NaN;
+
+            const match = raw.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+            if (!match) return NaN;
+
+            let hours = Number(match[1]);
+            const minutes = Number(match[2]);
+            const modifier = match[3];
+
+            if (minutes < 0 || minutes > 59) return NaN;
+            if (modifier) {
+                if (hours < 1 || hours > 12) return NaN;
+                if (hours === 12) hours = modifier === 'PM' ? 12 : 0;
+                else if (modifier === 'PM') hours += 12;
+            } else if (hours > 23) {
+                return NaN;
+            }
+            return hours * 60 + minutes;
+        }
+
+        function normalizeTime(value) {
+            const minutes = parseTime(value);
+            if (!Number.isFinite(minutes)) return null;
+            const h24 = Math.floor(minutes / 60);
+            const min = minutes % 60;
+            const suffix = h24 >= 12 ? 'PM' : 'AM';
+            const hour12 = h24 % 12 || 12;
+            return `${String(hour12).padStart(2, '0')}:${String(min).padStart(2, '0')} ${suffix}`;
+        }
+
+        function formatTime24to12(value) {
+            return normalizeTime(value) || '';
+        }
+
+        function normalizeDay(value) {
+            if (value === null || value === undefined) return null;
+            const raw = String(value).trim().toLowerCase().replace(/[^a-z]/g, '');
+            const aliases = {
+                sun:'Sunday', sunday:'Sunday', mon:'Monday', monday:'Monday', tue:'Tuesday', tues:'Tuesday', tuesday:'Tuesday',
+                wed:'Wednesday', wednesday:'Wednesday', thu:'Thursday', thur:'Thursday', thurs:'Thursday', thursday:'Thursday',
+                fri:'Friday', friday:'Friday', sat:'Saturday', saturday:'Saturday'
+            };
+            return aliases[raw] || null;
+        }
+
+        function normalizeDays(value) {
+            if (Array.isArray(value)) return value.flatMap(normalizeDays).filter(Boolean);
+            if (value === null || value === undefined) return [];
+            return String(value).split(/[,|;/]+/).map(normalizeDay).filter(Boolean);
+        }
+
+        function firstValue(obj, keys) {
+            for (const key of keys) {
+                if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') return obj[key];
+            }
+            return '';
+        }
+
+        function extractTimeRange(row) {
+            const startRaw = firstValue(row, ['start','startTime','start_time','from','begin','beginTime','startsAt']);
+            const endRaw = firstValue(row, ['end','endTime','end_time','to','finish','finishTime','endsAt']);
+            if (startRaw && endRaw) return { start: String(startRaw).trim(), end: String(endRaw).trim() };
+
+            const rangeRaw = firstValue(row, ['time','timeRange','timing','slot','period']);
+            if (rangeRaw) {
+                const match = String(rangeRaw).match(/(.+?)\s*(?:-|–|—|to)\s*(.+)$/i);
+                if (match) return { start: match[1].trim(), end: match[2].trim() };
+            }
+            return { start: '', end: '' };
+        }
+
+        function extractName(row) {
+            return String(firstValue(row, ['name','subject','subjectName','title','topic','course','courseName','course_name','paper','module','label','activity','lesson','lessonName','courseTitle','subject_title']) || '').trim();
+        }
+
+        function extractCode(row) {
+            return String(firstValue(row, ['code','subjectCode','subject_code','courseCode','course_code','paperCode','paper_code','moduleCode','module_code','subjectId','courseId','id']) || '').trim();
+        }
+
+        function extractFaculty(row) {
+            return String(firstValue(row, ['faculty','teacher','instructor','professor','lecturer','teacherName','instructorName','staff','staffName']) || '').trim();
+        }
+
+        function extractRoom(row) {
+            return String(firstValue(row, ['room','roomNo','roomNumber','room_no','classroom','location','venue','roomName']) || '').trim();
+        }
+
+        function extractType(row) {
+            const explicit = String(firstValue(row, ['type','classType','class_type','sessionType','session_type','category','lessonType']) || '').trim();
+            if (explicit) return explicit;
+            const name = extractName(row).toLowerCase();
+            if (/^break$/.test(name)) return 'Break';
+            if (/^lunch$/.test(name)) return 'Lunch';
+            return 'Lecture';
+        }
+
+        function extractGroup(row) {
+            const value = firstValue(row, ['group','sectionGroup','batch','batchGroup']);
+            return value ? String(value).trim() : '';
+        }
+
+        function isDayKey(key) {
+            return !!normalizeDay(key);
+        }
+
+        function rowsFromScheduleObject(schedule) {
+            const rows = [];
+            if (!schedule || typeof schedule !== 'object' || Array.isArray(schedule)) return rows;
+            for (const [key, value] of Object.entries(schedule)) {
+                if (!isDayKey(key) || !Array.isArray(value)) continue;
+                value.forEach(item => {
+                    if (item && typeof item === 'object') rows.push({ ...item, day: item.day || key });
+                });
+            }
+            return rows;
+        }
+
+        function collectCandidateRows(data) {
+            const candidates = [];
+            const seen = new Set();
+            const addRow = row => {
+                if (!row || typeof row !== 'object' || Array.isArray(row)) return;
+                const key = JSON.stringify(row);
+                if (!seen.has(key)) { seen.add(key); candidates.push(row); }
+            };
+            const addRows = rows => {
+                if (!Array.isArray(rows)) return;
+                rows.forEach(addRow);
+            };
+
+            // Format: { timetable: { days: [{ day, periods: [...] }] } }
+            const addDayPeriodRows = container => {
+                if (!container || typeof container !== 'object' || Array.isArray(container) || !Array.isArray(container.days)) return;
+                container.days.forEach(dayBlock => {
+                    if (!dayBlock || typeof dayBlock !== 'object') return;
+                    const day = normalizeDay(firstValue(dayBlock, ['day','weekday','weekDay','dayName']));
+                    const periods = dayBlock.periods || dayBlock.lessons || dayBlock.classes || dayBlock.entries || dayBlock.items;
+                    if (!day || !Array.isArray(periods)) return;
+                    periods.forEach(period => {
+                        if (period && typeof period === 'object' && !Array.isArray(period)) addRow({ ...period, day: period.day || day });
+                    });
+                });
+            };
+
+            // Generic nested scan: if an object contains a recognizable timetable row,
+            // capture it even when it is wrapped in an unfamiliar container name.
+            const looksLikeScheduleRow = obj => {
+                if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+                const hasTime = !!(firstValue(obj, ['start','startTime','start_time','from','begin','beginTime','startsAt','end','endTime','end_time','to','finish','finishTime','endsAt','time','timeRange','timing','slot','period']));
+                const hasName = !!extractName(obj);
+                const hasDay = !!(firstValue(obj, ['day','weekday','weekDay','dayName','days']));
+                return hasTime && hasName && (hasDay || obj.__inheritedDay);
+            };
+            const walk = (value, inheritedDay = null, depth = 0) => {
+                if (depth > 8 || value === null || value === undefined) return;
+                if (Array.isArray(value)) {
+                    value.forEach(item => walk(item, inheritedDay, depth + 1));
+                    return;
+                }
+                if (typeof value !== 'object') return;
+
+                let currentDay = inheritedDay;
+                if (isDayKey(value.day)) currentDay = normalizeDay(value.day);
+                if (looksLikeScheduleRow(value)) addRow(currentDay && !value.day ? { ...value, day: currentDay } : value);
+
+                for (const [key, child] of Object.entries(value)) {
+                    if (['subjects','course_catalog','courseCatalog','metadata'].includes(key)) continue;
+                    const childDay = isDayKey(key) ? normalizeDay(key) : currentDay;
+                    if (child && typeof child === 'object') walk(child, childDay, depth + 1);
+                }
+            };
+
+            if (Array.isArray(data)) addRows(data);
+
+            const containers = [
+                data,
+                data?.timetable,
+                data?.data,
+                data?.schedule,
+                data?.weekly_schedule,
+                data?.weeklySchedule,
+                data?.timetable?.schedule,
+                data?.timetable?.weekly_schedule,
+                data?.timetable?.weeklySchedule,
+                data?.data?.schedule,
+                data?.data?.weekly_schedule,
+                data?.data?.weeklySchedule
+            ];
+            for (const container of containers) {
+                if (!container || typeof container !== 'object' || Array.isArray(container)) continue;
+                addDayPeriodRows(container);
+                if (Array.isArray(container.timetable)) addRows(container.timetable);
+                if (Array.isArray(container.entries)) addRows(container.entries);
+                if (Array.isArray(container.items)) addRows(container.items);
+                if (Array.isArray(container.classes)) addRows(container.classes);
+                if (Array.isArray(container.schedules)) addRows(container.schedules);
+                if (Array.isArray(container.lessons)) addRows(container.lessons);
+                if (Array.isArray(container.periods)) addRows(container.periods);
+                if (container.weekly_schedule && typeof container.weekly_schedule === 'object' && !Array.isArray(container.weekly_schedule)) {
+                    addRows(rowsFromScheduleObject(container.weekly_schedule));
+                }
+                if (container.weeklySchedule && typeof container.weeklySchedule === 'object' && !Array.isArray(container.weeklySchedule)) {
+                    addRows(rowsFromScheduleObject(container.weeklySchedule));
+                }
+                addRows(rowsFromScheduleObject(container));
+            }
+
+            // Last-resort structural detection for sensible but unknown wrappers.
+            walk(data);
+            return candidates;
+        }
+
+        function findScheduleRows(data) {
+            const rows = collectCandidateRows(data);
+            const normalized = [];
+            const errors = [];
+
+            rows.forEach((row, index) => {
+                const dayList = normalizeDays(firstValue(row, ['days','day','weekday','weekDay','dayName','dateDay']));
+                const times = extractTimeRange(row);
+                const name = extractName(row);
+                const start = normalizeTime(times.start);
+                const end = normalizeTime(times.end);
+
+                if (!dayList.length && row.day && isDayKey(row.day)) dayList.push(normalizeDay(row.day));
+                if (!dayList.length || !start || !end || !name) {
+                    return;
+                }
+                const startMinutes = parseTime(start);
+                const endMinutes = parseTime(end);
+                if (!Number.isFinite(startMinutes) || !Number.isFinite(endMinutes) || startMinutes >= endMinutes) {
+                    errors.push(`Entry ${index + 1} has an invalid time range.`);
+                    return;
+                }
+
+                normalized.push({
+                    dayList: [...new Set(dayList)],
+                    start,
+                    end,
+                    code: extractCode(row),
+                    name,
+                    classType: extractType(row),
+                    faculty: extractFaculty(row),
+                    durationType: String(firstValue(row, ['scheduleType','repeatType','durationType','repeat']) || '').trim(),
+                    room: extractRoom(row),
+                    group: extractGroup(row),
+                    period: firstValue(row, ['period','periodNumber','periodNo','slotNumber']) || '',
+                    source: row.source || 'imported',
+                    createdDate: row.createdDate || new Date().toISOString()
+                });
+            });
+
+            return { normalized, errors };
+        }
+
+        function extractMetadata(data) {
+            const timetableRoot = data?.timetable && typeof data.timetable === 'object' && !Array.isArray(data.timetable) ? data.timetable : null;
+            const nestedMetadata = data?.metadata && typeof data.metadata === 'object' && !Array.isArray(data.metadata) ? data.metadata : {};
+            const root = { ...(timetableRoot || {}), ...(data || {}), ...nestedMetadata };
+            const meta = {};
+            const mappings = {
+                name: ['name','title','timetableName','class','className'],
+                institution: ['institution','college','university','school'],
+                department: ['department','dept'],
+                program: ['program','course','degree'],
+                academicYear: ['academicYear','academic_year','sessionYear'],
+                semester: ['semester','term'],
+                section: ['section','classSection'],
+                session: ['session','academicSession','academic_session','termSession'],
+                classroom: ['classroom','defaultRoom','room_default'],
+                campus: ['campus','location'],
+                effectiveFrom: ['effectiveFrom','effective_from'],
+                version: ['version','schemaVersion']
+            };
+            Object.entries(mappings).forEach(([target, keys]) => {
+                const value = firstValue(root, keys);
+                if (value) meta[target] = String(value).trim();
+            });
+            return meta;
+        }
+
+        function extractSubjectCatalog(data) {
+            const raw = data?.subjects || data?.timetable?.subjects || data?.data?.subjects;
+            const courseCatalog = data?.course_catalog || data?.courseCatalog || data?.data?.course_catalog || data?.data?.courseCatalog;
+            const catalog = {};
+
+            const addCatalogItem = (value, fallbackKey = '') => {
+                if (!value || typeof value !== 'object' || Array.isArray(value)) return;
+                const code = String(firstValue(value, ['code','subjectCode','subject_code','courseCode','course_code']) || fallbackKey).trim();
+                const name = String(firstValue(value, ['name','subject','subjectName','title','courseName','course_name']) || '').trim();
+                if (!name) return;
+                const key = code || String(fallbackKey || name).trim();
+                catalog[key] = {
+                    code: code || key,
+                    name,
+                    faculty: String(firstValue(value, ['faculty','teacher','instructor','professor']) || '').trim(),
+                    room: String(firstValue(value, ['room','classroom','location','venue']) || '').trim(),
+                    type: String(firstValue(value, ['type','classType']) || '').trim(),
+                    groups: Array.isArray(value.groups) ? value.groups.map(String) : [],
+                    ...(value.credits !== undefined ? { credits: value.credits } : {}),
+                    ...(value.email ? { email: String(value.email).trim() } : {})
+                };
+            };
+
+            if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+                Object.entries(raw).forEach(([key, value]) => addCatalogItem(value, key));
+            }
+
+            if (Array.isArray(raw)) {
+                raw.forEach((value, index) => addCatalogItem(value, String(index)));
+            }
+
+            if (Array.isArray(courseCatalog)) {
+                courseCatalog.forEach(value => addCatalogItem(value));
+            } else if (courseCatalog && typeof courseCatalog === 'object') {
+                Object.entries(courseCatalog).forEach(([key, value]) => addCatalogItem(value, key));
+            }
+
+            return catalog;
+        }
+
+        function getSubjectCatalog() {
+            const map = new Map();
+
+            Object.entries(subjectCatalog).forEach(([key, item]) => {
+                if (!item?.name) return;
+                map.set(String(item.code || key), { originalCode:key, code:String(item.code || key), name:String(item.name), faculty:item.faculty || '', room:item.room || '', credits:item.credits, email:item.email || '' });
+            });
+
+            Object.values(baseTimetable).flat().forEach(cls => {
+                if (!cls || !cls.name || ['break','lunch'].includes(String(cls.classType || '').toLowerCase())) return;
+                const key = String(cls.code || cls.name).trim();
+                if (!map.has(key)) map.set(key, { originalCode:key, code:String(cls.code || ''), name:String(cls.name), faculty:'', room:cls.room || '' });
+            });
+
+            customSchedules.forEach(cls => {
+                if (!cls?.name || ['break','lunch'].includes(String(cls.classType || '').toLowerCase())) return;
+                const key = String(cls.code || cls.name).trim();
+                if (!map.has(key)) map.set(key, { originalCode:key, code:String(cls.code || ''), name:String(cls.name), faculty:'', room:cls.room || '' });
+            });
+
+            return [...map.values()];
+        }
+
+        function applySubjectOverride(cls) {
+            const override = subjectOverrides[cls.code];
+            return override ? { ...cls, code: override.code || cls.code, name: override.name || cls.name } : cls;
+        }
+
+        function getActiveScheduleDays(item, date = new Date()) {
+            if (!item || !Array.isArray(item.days)) return [];
+            if (!isScheduleActive(item, date)) return [];
+
+            // "Only Today" is always restricted to the actual current weekday.
+            // This also protects against malformed/imported data that lists multiple days.
+            if (item.type === 'today') {
+                return [daysOfWeek[date.getDay()]];
+            }
+
+            return [...new Set(item.days)].filter(day => daysOfWeek.includes(day));
+        }
+
+        function rebuildTimetable(date = new Date()) {
+            timetable = createEmptyTimetable();
+            daysOfWeek.forEach(day => {
+                const base = Array.isArray(baseTimetable[day]) ? baseTimetable[day] : [];
+                timetable[day] = base.map(applySubjectOverride);
+            });
+
+            customSchedules.forEach(item => {
+                getActiveScheduleDays(item, date).forEach(day => {
+                    if (!timetable[day]) timetable[day] = [];
+                    timetable[day].push(applySubjectOverride(item));
+                });
+            });
+
+            daysOfWeek.forEach(day => {
+                timetable[day].sort((a, b) => parseTime(a.start) - parseTime(b.start));
+            });
+        }
+
+        function getDateKey(date = new Date()) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth()+1).padStart(2,'0');
+            const d = String(date.getDate()).padStart(2,'0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getWeekStart(date = new Date()) {
+            const d = new Date(date);
+            d.setHours(0,0,0,0);
+            const day = d.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            d.setDate(d.getDate() + diff);
+            return d;
+        }
+
+        function isScheduleActive(item, date = new Date()) {
+            if (!item) return false;
+            if (item.type === 'permanent') return true;
+            if (!item.createdDate) return false;
+            const created = new Date(item.createdDate);
+            if (Number.isNaN(created.getTime())) return false;
+            if (item.type === 'today') return getDateKey(created) === getDateKey(date);
+            if (item.type === 'this_week') return getWeekStart(created).getTime() === getWeekStart(date).getTime();
+            if (item.type === 'this_month') return created.getFullYear() === date.getFullYear() && created.getMonth() === date.getMonth();
+            return false;
+        }
+
+        function isValidSchedule(item) {
+            return item && typeof item === 'object' && Array.isArray(item.days) && item.days.every(d => daysOfWeek.includes(d)) &&
+                typeof item.start === 'string' && Number.isFinite(parseTime(item.start)) && typeof item.end === 'string' && Number.isFinite(parseTime(item.end)) &&
+                typeof item.name === 'string' && ['today','this_week','this_month','permanent'].includes(item.type);
+        }
+
+        function cleanupExpiredSchedules() {
+            const before = customSchedules.length;
+            customSchedules = customSchedules.filter(item => item.type === 'permanent' || isScheduleActive(item));
+            if (before !== customSchedules.length) saveTimetableData();
+        }
+
+        function saveTimetableData() {
+            localStorage.setItem('csda-data-version', String(APP_DATA_VERSION));
+            localStorage.setItem('csda-base-timetable', JSON.stringify(baseTimetable));
+            localStorage.setItem('csda-custom-schedules', JSON.stringify(customSchedules));
+            localStorage.setItem('csda-subject-overrides', JSON.stringify(subjectOverrides));
+            localStorage.setItem('csda-subject-catalog', JSON.stringify(subjectCatalog));
+            localStorage.setItem('csda-timetable-meta', JSON.stringify(timetableMeta));
+        }
+
+        function loadTimetableData() {
+            const version = Number(localStorage.getItem('csda-data-version') || 0);
+
+            // Version 3 intentionally starts with a blank timetable. This clears the
+            // old built-in Semester III data once when the new generic app is installed.
+            if (version < 3) {
+                // Version 3 was the one-time migration that removed the old built-in
+                // Semester III timetable. Later versions must preserve user data.
+                localStorage.removeItem('csda-base-timetable');
+                localStorage.removeItem('csda-custom-schedules');
+                localStorage.removeItem('csda-subject-overrides');
+                localStorage.removeItem('csda-subject-catalog');
+                localStorage.removeItem('csda-timetable-meta');
+            }
+            if (version < APP_DATA_VERSION) localStorage.setItem('csda-data-version', String(APP_DATA_VERSION));
+
+            try {
+                const storedBase = JSON.parse(localStorage.getItem('csda-base-timetable') || 'null');
+                if (storedBase && typeof storedBase === 'object' && !Array.isArray(storedBase)) {
+                    baseTimetable = createEmptyTimetable();
+                    daysOfWeek.forEach(day => { baseTimetable[day] = Array.isArray(storedBase[day]) ? storedBase[day].filter(Boolean) : []; });
+                }
+            } catch { baseTimetable = createEmptyTimetable(); }
+
+            try {
+                const stored = JSON.parse(localStorage.getItem('csda-custom-schedules') || '[]');
+                customSchedules = Array.isArray(stored) ? stored.filter(isValidSchedule) : [];
+            } catch { customSchedules = []; }
+
+            // Older builds could place imported temporary schedules in baseTimetable.
+            // Move them to customSchedules so their Today/Week/Month expiry is honored.
+            const migratedTemporary = [];
+            daysOfWeek.forEach(day => {
+                const keep = [];
+                (baseTimetable[day] || []).forEach(item => {
+                    if (['today','this_week','this_month'].includes(item?.type) && isValidSchedule(item)) {
+                        migratedTemporary.push(item);
+                    } else {
+                        keep.push(item);
+                    }
+                });
+                baseTimetable[day] = keep;
+            });
+            if (migratedTemporary.length) {
+                const existingIds = new Set(customSchedules.map(item => item.id));
+                migratedTemporary.forEach(item => {
+                    if (!existingIds.has(item.id)) customSchedules.push(item);
+                });
+            }
+
+            try {
+                const stored = JSON.parse(localStorage.getItem('csda-subject-overrides') || '{}');
+                subjectOverrides = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+            } catch { subjectOverrides = {}; }
+
+            try {
+                const stored = JSON.parse(localStorage.getItem('csda-subject-catalog') || '{}');
+                subjectCatalog = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+            } catch { subjectCatalog = {}; }
+
+            try {
+                const stored = JSON.parse(localStorage.getItem('csda-timetable-meta') || '{}');
+                timetableMeta = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+            } catch { timetableMeta = {}; }
+
+            cleanupExpiredSchedules();
+            rebuildTimetable(new Date());
+        }
+
+        function updateTimetableMetaUI() {
+            const profileName = String(localStorage.getItem('csda-profile-name') || '').trim();
+            const timetableName = String(timetableMeta.name || timetableMeta.program || 'Timetable').trim();
+            const hasData = hasScheduleData();
+            const greeting = profileName ? `Hi, ${profileName}` : timetableName;
+            const detailParts = [timetableMeta.semester, timetableMeta.section ? `Section ${timetableMeta.section}` : ''].filter(Boolean);
+            const detail = detailParts.join(' • ');
+
+            document.title = `${profileName || timetableName} | Timetable`;
+            const title = document.getElementById('app-user-title');
+            const subtitle = document.getElementById('app-user-subtitle');
+            if (title) title.textContent = greeting;
+            if (subtitle) subtitle.textContent = hasData ? 'Your schedule' : 'No timetable added';
+
+            const weekHeading = document.getElementById('week-heading');
+            const subjectsHeading = document.getElementById('subjects-heading');
+            if (weekHeading) weekHeading.textContent = hasData ? 'Your weekly schedule' : 'No timetable yet';
+            if (subjectsHeading) subjectsHeading.textContent = hasData ? 'Your timetable subjects' : 'Add a timetable to see subjects';
+
+            // Keep the area below the Today heading clean once a timetable exists.
+            // The date pill is enough context there; the metadata line is only useful on an empty app.
+            const todayName = document.getElementById('today-name-display');
+            if (todayName) {
+                const showEmptyHint = !hasData;
+                todayName.textContent = showEmptyHint ? 'Import a JSON timetable or add classes manually' : '';
+                todayName.hidden = !showEmptyHint;
+                todayName.setAttribute('aria-hidden', String(!showEmptyHint));
+            }
+        }
+
+        function renderEmptyState(message = 'No timetable added yet.') {
+            return `
+                <div class="empty-state empty-state-rich">
+                    <strong>${escapeHTML(message)}</strong>
+                    <span>Import a JSON timetable or add your classes manually.</span>
+                    <div class="empty-state-actions">
+                        <button type="button" class="profile-action-btn empty-action" data-empty-action="import">Import JSON</button>
+                        <button type="button" class="profile-action-btn empty-action" data-empty-action="manual">Add manually</button>
+                    </div>
+                </div>`;
+        }
+
+        function bindEmptyStateActions(container) {
+            container?.querySelectorAll('[data-empty-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.emptyAction === 'import') openImportPicker();
+                    else openTimetableModal();
+                });
+            });
+        }
+
+        function renderSubjects() {
+            const container = document.getElementById('subject-list-container');
+            if (!container) return;
+
+            const subjects = getSubjectCatalog();
+            if (!subjects.length) {
+                container.innerHTML = renderEmptyState();
+                bindEmptyStateActions(container);
+                return;
+            }
+
+            container.innerHTML = subjects.map(subject => {
+                const details = [subject.faculty, subject.room].filter(Boolean).join(' • ');
+                return `
+                    <div class="subject-item">
+                        ${subject.code ? `<span class="subject-code">${escapeHTML(subject.code)}</span>` : ''}
+                        <span class="subject-name">${escapeHTML(subject.name)}</span>
+                        ${details ? `<span class="subject-details">${escapeHTML(details)}</span>` : ''}
+                    </div>`;
+            }).join('') + `
+                <button class="subject-item add-schedule-card" type="button" id="add-schedule-card">
+                    <span class="add-schedule-icon">＋</span>
+                    <span class="subject-name">Add Schedule</span>
+                </button>`;
+
+            document.getElementById('add-schedule-card')?.addEventListener('click', openTimetableModal);
+        }
+
+        function removeAddedSchedule(scheduleId) {
+            const item = customSchedules.find(x => x.id === scheduleId);
+            if (!item || item.source !== 'added') {
+                showToast('⚠️ Only manually added classes can be removed.');
+                return;
+            }
+            customSchedules = customSchedules.filter(x => x.id !== scheduleId);
+            saveTimetableData();
+            rebuildTimetable();
+            renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI();
+            if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
+            showToast(`🗑️ ${item.name} removed from timetable.`);
+        }
+
+        function editSubject(originalCode) {
+            const current = subjectOverrides[originalCode] || {};
+            const catalog = subjectCatalog[originalCode] || {};
+            const base = Object.values(baseTimetable).flat().find(c => c.code === originalCode);
+            const currentCode = current.code || catalog.code || base?.code || originalCode;
+            const currentName = current.name || catalog.name || base?.name || originalCode;
+            const code = prompt('Subject code:', currentCode);
+            if (code === null) return;
+            const name = prompt('Subject name:', currentName);
+            if (name === null) return;
+            if (!code.trim() || !name.trim()) { showToast('⚠️ Subject code and name are required.'); return; }
+            subjectOverrides[originalCode] = { code:code.trim(), name:name.trim() };
+            saveTimetableData(); rebuildTimetable(); renderSubjects(); renderTodayClasses(); renderWeeklyTimetable();
+            if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
+            showToast('✅ Subject updated.');
+        }
+
+        function updateScheduleDaysVisibility() {
+            const type = document.querySelector('input[name="schedule-type"]:checked')?.value;
+            const daysGroup = document.getElementById('schedule-days-group');
+            if (type === 'today') {
+                document.querySelectorAll('.day-choice input').forEach(input => input.checked = false);
+                if (daysGroup) daysGroup.style.display = 'none';
+            } else if (daysGroup) {
+                daysGroup.style.display = 'block';
+            }
+        }
+
+        let activeTimeTarget = null;
+        let draftTime = { hour:'08', minute:'00', meridiem:'AM' };
+
+        function renderTimePickerOptions() {
+            const hours = document.getElementById('time-hours');
+            const minutes = document.getElementById('time-minutes');
+            const meridiem = document.getElementById('time-meridiem');
+            if (!hours || !minutes || !meridiem) return;
+            hours.innerHTML = Array.from({length:12}, (_,i) => { const v=String(i+1).padStart(2,'0'); return `<button type="button" class="time-picker-option ${draftTime.hour===v?'selected':''}" data-time-part="hour" data-value="${v}">${v}</button>`; }).join('');
+            minutes.innerHTML = Array.from({length:60}, (_,i) => { const v=String(i).padStart(2,'0'); return `<button type="button" class="time-picker-option ${draftTime.minute===v?'selected':''}" data-time-part="minute" data-value="${v}">${v}</button>`; }).join('');
+            meridiem.innerHTML = ['AM','PM'].map(v => `<button type="button" class="time-picker-option ${draftTime.meridiem===v?'selected':''}" data-time-part="meridiem" data-value="${v}">${v}</button>`).join('');
+        }
+
+        function openTimePicker(target) {
+            activeTimeTarget = target;
+            const value = document.getElementById(`schedule-${target}`)?.value || '';
+            const minutes = parseTime(value);
+            if (Number.isFinite(minutes)) {
+                const h = Math.floor(minutes / 60);
+                draftTime.hour = String((h % 12) || 12).padStart(2,'0');
+                draftTime.minute = String(minutes % 60).padStart(2,'0');
+                draftTime.meridiem = h >= 12 ? 'PM' : 'AM';
+            } else {
+                draftTime = { hour:'08', minute:'00', meridiem:'AM' };
+            }
+            renderTimePickerOptions();
+            document.getElementById('time-picker-popover')?.classList.add('open');
+            document.querySelectorAll('.time-control').forEach(x => x.classList.toggle('active', x.dataset.timeTarget === target));
+        }
+
+        function closeTimePicker() {
+            document.getElementById('time-picker-popover')?.classList.remove('open');
+            document.querySelectorAll('.time-control').forEach(x => x.classList.remove('active'));
+            activeTimeTarget = null;
+        }
+
+        function commitTimePicker() {
+            if (!activeTimeTarget) return;
+            let h = Number(draftTime.hour) % 12;
+            if (draftTime.meridiem === 'PM') h += 12;
+            const value = `${String(h).padStart(2,'0')}:${draftTime.minute}`;
+            const hidden = document.getElementById(`schedule-${activeTimeTarget}`);
+            const display = document.getElementById(`schedule-${activeTimeTarget}-display`);
+            if (hidden) hidden.value = value;
+            if (display) display.textContent = `${draftTime.hour}:${draftTime.minute} ${draftTime.meridiem}`;
+            closeTimePicker();
+        }
+
+        function openTimetableModal() {
+            const backdrop = document.getElementById('timetable-modal-backdrop');
+            document.getElementById('timetable-form')?.reset();
+            document.querySelectorAll('.day-choice input').forEach(x => x.checked = false);
+            document.querySelectorAll('input[name="schedule-type"]').forEach(x => x.checked = x.value === 'permanent');
+            document.getElementById('schedule-code').value = '';
+            document.getElementById('schedule-name').value = '';
+            document.getElementById('schedule-start').value = '';
+            document.getElementById('schedule-end').value = '';
+            document.getElementById('schedule-start-display').textContent = 'Select time';
+            document.getElementById('schedule-end-display').textContent = 'Select time';
+            closeTimePicker();
+            updateScheduleDaysVisibility();
+            backdrop?.classList.add('open');
+            backdrop?.setAttribute('aria-hidden','false');
+            setTimeout(() => document.getElementById('schedule-name')?.focus(), 0);
+        }
+
+        function closeTimetableModal() {
+            closeTimePicker();
+            const backdrop = document.getElementById('timetable-modal-backdrop');
+            backdrop?.classList.remove('open');
+            backdrop?.setAttribute('aria-hidden','true');
+        }
+
+        function handleTimetableForm(event) {
+            event.preventDefault();
+            const type = document.querySelector('input[name="schedule-type"]:checked')?.value || 'permanent';
+            const code = document.getElementById('schedule-code').value.trim();
+            const topic = document.getElementById('schedule-name').value.trim();
+            const start24 = document.getElementById('schedule-start').value;
+            const end24 = document.getElementById('schedule-end').value;
+            let days = [...document.querySelectorAll('.day-choice input:checked')].map(x => x.value);
+
+            if (!topic) { showToast('⚠️ Enter a subject or topic name.'); return; }
+            if (!start24 || !end24) { showToast('⚠️ Select both start and end times.'); return; }
+            if (parseTime(start24) >= parseTime(end24)) { showToast('⚠️ End time must be after start time.'); return; }
+            if (type === 'today') days = [daysOfWeek[new Date().getDay()]];
+            else if (!days.length) { showToast('⚠️ Select at least one day.'); return; }
+
+            const now = new Date();
+            const item = {
+                id:`csda-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+                code,
+                name:topic,
+                days,
+                start:formatTime24to12(start24),
+                end:formatTime24to12(end24),
+                type,
+                classType:'Manual',
+                createdDate:now.toISOString(),
+                source:'added'
+            };
+            customSchedules.push(item);
+            if (code && !subjectCatalog[code]) subjectCatalog[code] = { code, name:topic, faculty:'', room:'', type:'', groups:[] };
+            saveTimetableData(); rebuildTimetable(); renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI(); closeTimetableModal();
+            if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
+            showToast('✅ Class added to timetable.');
+        }
+
+        function openImportPicker() {
+            const input = document.getElementById('timetable-json-input');
+            if (input) input.click();
+        }
+
+        function exportTimetableJSON() {
+            if (!hasScheduleData()) {
+                showToast('⚠️ Add or import a timetable before exporting.');
+                return;
+            }
+
+            const entries = [];
+            daysOfWeek.forEach(day => {
+                (baseTimetable[day] || []).forEach(cls => {
+                    const override = subjectOverrides[cls.code] || {};
+                    entries.push({
+                        day,
+                        start:cls.start,
+                        end:cls.end,
+                        code:override.code || cls.code || '',
+                        name:override.name || cls.name,
+                        type:cls.classType || 'Lecture',
+                        teacher:cls.faculty || '',
+                        period:cls.period || '',
+                        room:cls.room || '',
+                        group:cls.group || '',
+                        source:'imported'
+                    });
+                });
+            });
+            customSchedules.forEach(cls => {
+                cls.days.forEach(day => entries.push({
+                    day, start:cls.start, end:cls.end, code:cls.code || '', name:cls.name,
+                    type:cls.type || 'permanent', classType:cls.classType || 'Manual', createdDate:cls.createdDate, room:cls.room || '', group:cls.group || '', source:'custom'
+                }));
+            });
+
+            const payload = {
+                version:3,
+                name:timetableMeta.name || 'My Timetable',
+                exportedAt:new Date().toISOString(),
+                metadata:{...timetableMeta},
+                timetable:entries,
+                subjects:subjectCatalog
+            };
+
+            const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a=document.createElement('a');
+            a.href=url;
+            a.download='timetable.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast('📤 Timetable JSON exported.');
+        }
+
+        async function importTimetableJSON(file) {
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const result = findScheduleRows(data);
+                if (!result.normalized.length) {
+                    throw new Error('No recognizable classes found. The JSON needs day, subject, start time and end time.');
+                }
+                if (result.errors.length) {
+                    throw new Error(result.errors[0]);
+                }
+
+                if (hasScheduleData() && !confirm('This will replace your current timetable with the imported one. Continue?')) return;
+
+                const imported = [];
+                result.normalized.forEach(row => {
+                    row.dayList.forEach(day => {
+                        imported.push({
+                            id:`import-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+                            code:row.code,
+                            name:row.name,
+                            days:[day],
+                            start:row.start,
+                            end:row.end,
+                            type:['today','this_week','this_month','permanent'].includes(row.durationType) ? row.durationType : 'permanent',
+                            classType:row.classType || '',
+                            faculty:row.faculty || '',
+                            period:row.period || '',
+                            room:row.room,
+                            group:row.group,
+                            createdDate:row.createdDate || new Date().toISOString(),
+                            source:'imported'
+                        });
+                    });
+                });
+
+                baseTimetable = createEmptyTimetable();
+                customSchedules = [];
+                imported.forEach(item => {
+                    if (item.type === 'permanent') {
+                        baseTimetable[item.days[0]].push(item);
+                    } else {
+                        customSchedules.push(item);
+                    }
+                });
+                subjectOverrides = {};
+                subjectCatalog = extractSubjectCatalog(data);
+                timetableMeta = {...extractMetadata(data)};
+
+                // Fill the subject catalog from schedule entries when the JSON has no subjects object.
+                imported.forEach(item => {
+                    if (!item.code) return;
+                    if (!subjectCatalog[item.code]) {
+                        subjectCatalog[item.code] = { code:item.code, name:item.name, faculty:item.faculty || '', room:item.room || '', type:item.classType || '', groups:item.group ? [item.group] : [] };
+                    } else {
+                        subjectCatalog[item.code].name = subjectCatalog[item.code].name || item.name;
+                        subjectCatalog[item.code].room = subjectCatalog[item.code].room || item.room || '';
+                        subjectCatalog[item.code].faculty = subjectCatalog[item.code].faculty || item.faculty || '';
+                    }
+                });
+
+                saveTimetableData();
+                rebuildTimetable();
+                renderHeaderAndTitles();
+                renderTodayClasses();
+                renderWeeklyTimetable();
+                renderSubjects();
+                updateTimetableMetaUI();
+
+                if (localStorage.getItem('csda-notifications') === 'true') await scheduleClassNotifications().catch(console.error);
+                showToast(`✅ Imported ${imported.length} timetable entr${imported.length === 1 ? 'y' : 'ies'}.`);
+            } catch (error) {
+                console.error(error);
+                showToast(`⚠️ Import failed: ${error.message || 'Invalid JSON file.'}`);
+            }
+        }
+
+        function renderHeaderAndTitles() {
+            const { dateStr } = getCurrentDateTimeInfo();
+            const dateEl = document.getElementById('current-date-display');
+            if (dateEl) dateEl.textContent = dateStr;
+            updateTimetableMetaUI();
+        }
+
+        function createClassCardHTML(cls, isTodayCard = false) {
+            const startMins = parseTime(cls.start);
+            const endMins = parseTime(cls.end);
+            const dataAttrs = isTodayCard ? `data-start="${startMins}" data-end="${endMins}"` : '';
+            const lifecycleTypes = ['today','this_week','this_month','permanent'];
+            const displayType = cls.classType && !lifecycleTypes.includes(String(cls.classType).toLowerCase())
+                ? cls.classType
+                : '';
+            const meta = [cls.code, displayType, cls.group ? `Group ${cls.group}` : '', cls.room, cls.faculty].filter(Boolean).join(' • ');
+            return `
+                <div class="card" ${dataAttrs}>
+                    <div class="card-header">
+                        <div class="card-time"><span class="dot" style="display:none;"></span>${escapeHTML(cls.start)} — ${escapeHTML(cls.end)}</div>
+                        <div class="card-status-badge"></div>
+                    </div>
+                    <div class="card-body">
+                        ${meta ? `<p>${escapeHTML(meta)}</p>` : ''}
+                        <h4>${escapeHTML(cls.name)}</h4>
+                    </div>
+                    <div class="countdown-text"></div>
+                </div>`;
+        }
+
+        function renderTodayClasses() {
+            const { dayName } = getCurrentDateTimeInfo();
+            const container = document.getElementById('today-classes-container');
+            if (!container) return;
+            const todayClasses = timetable[dayName] || [];
+
+            if (!hasScheduleData()) {
+                container.innerHTML = renderEmptyState('Your timetable is empty.');
+                bindEmptyStateActions(container);
+                return;
+            }
+            if (!todayClasses.length) {
+                container.innerHTML = `<div class="empty-state">No classes scheduled for today. Enjoy your day!</div>`;
+                return;
+            }
+            container.innerHTML = todayClasses.map(cls => createClassCardHTML(cls, true)).join('');
+            updateClassStatus();
+        }
+
+        function renderWeeklyTimetable() {
+            const { dayName: currentDay } = getCurrentDateTimeInfo();
+            const tabsContainer = document.getElementById('week-tabs-container');
+            const contentContainer = document.getElementById('week-content-container');
+            if (!tabsContainer || !contentContainer) return;
+
+            if (!hasScheduleData()) {
+                tabsContainer.innerHTML = '';
+                contentContainer.innerHTML = renderEmptyState('No weekly timetable yet.');
+                bindEmptyStateActions(contentContainer);
+                return;
+            }
+
+            let tabsHTML = '', contentHTML = '';
+            const weekOrder = [...WEEK_DAYS];
+            const todayIdx = weekOrder.indexOf(currentDay);
+            const startIdx = (todayIdx - 1 + 7) % 7;
+            const displayOrder = Array.from({length:7}, (_,i) => weekOrder[(startIdx+i)%7]);
+
+            displayOrder.forEach(day => {
+                const isActive = day === currentDay ? 'active' : '';
+                tabsHTML += `<button class="tab-btn ${isActive}" type="button" data-week-day="${day}" id="tab-${day}">${day}</button>`;
+                const classes = timetable[day] || [];
+                const dayContent = classes.length ? classes.map(cls => createClassCardHTML(cls, false)).join('') : `<div class="empty-state">No classes on ${day}.</div>`;
+                contentHTML += `<div class="week-content ${isActive}" id="content-${day}">${dayContent}</div>`;
+            });
+            tabsContainer.innerHTML = tabsHTML;
+            contentContainer.innerHTML = contentHTML;
+            tabsContainer.querySelectorAll('[data-week-day]').forEach(btn => btn.addEventListener('click', () => switchWeekTab(btn.dataset.weekDay)));
+        }
+
+        function switchWeekTab(selectedDay) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.weekDay === selectedDay));
+            document.querySelectorAll('.week-content').forEach(content => content.classList.toggle('active', content.id === `content-${selectedDay}`));
+        }
+        window.switchWeekTab = switchWeekTab;
+
+        function updateClassStatus() {
+            const { currentMinutes } = getCurrentDateTimeInfo();
+            const cards = document.querySelectorAll('#today-classes-container .card');
+            let foundNext = false;
+            let allCompleted = true;
+
+            cards.forEach(card => {
+                const start = Number(card.dataset.start);
+                const end = Number(card.dataset.end);
+                if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+                const badge = card.querySelector('.card-status-badge');
+                const countdown = card.querySelector('.countdown-text');
+                const dot = card.querySelector('.dot');
+                card.className = 'card';
+                dot.style.display = 'none';
+
+                if (currentMinutes >= end) {
+                    card.classList.add('status-completed');
+                    badge.textContent = '✓ COMPLETED';
+                    countdown.textContent = '';
+                } else if (currentMinutes >= start) {
+                    card.classList.add('status-now');
+                    badge.textContent = 'NOW';
+                    dot.style.display = 'inline-block';
+                    countdown.textContent = `Ends in ${end - currentMinutes} min`;
+                    allCompleted = false;
+                } else {
+                    allCompleted = false;
+                    if (!foundNext) {
+                        card.classList.add('status-next');
+                        badge.textContent = 'NEXT';
+                        const startsIn = start - currentMinutes;
+                        countdown.textContent = startsIn < 60 ? `Starts in ${startsIn} min` : `Starts in ${Math.floor(startsIn/60)}h ${startsIn%60}m`;
+                        foundNext = true;
+                    } else {
+                        badge.textContent = '';
+                        countdown.textContent = '';
+                    }
+                }
+            });
+
+            const old = document.getElementById('no-more-msg');
+            if (old) old.remove();
+            if (allCompleted && cards.length) {
+                document.getElementById('today-classes-container')?.insertAdjacentHTML('beforeend', '<div id="no-more-msg" class="empty-state" style="margin-top:12px;">No more classes today.</div>');
+            }
+        }
+
+        function showPage(page, swipeDirection = null) {
+            document.querySelectorAll('.app-page').forEach(section => section.classList.remove('active','swipe-enter-left','swipe-enter-right'));
+            const target = document.getElementById(`page-${page}`);
+            if (target) {
+                target.classList.add('active');
+                if (swipeDirection === 'left' || swipeDirection === 'right') {
+                    void target.offsetWidth;
+                    target.classList.add(swipeDirection === 'left' ? 'swipe-enter-left' : 'swipe-enter-right');
+                }
+            }
+            document.querySelectorAll('.app-nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+        window.showPage = showPage;
+
+        function setupSwipeNavigation() {
+            if (window.__csdaSwipeNavigationBound) return;
+            window.__csdaSwipeNavigationBound = true;
+            const pages = ['today','week','subjects','profile'];
+            let touchStartX=0, touchStartY=0, touchStartTime=0, excluded=false;
+            document.addEventListener('touchstart', event => {
+                if (event.touches.length !== 1) return;
+                const target = event.target;
+                excluded = !!target.closest('.app-topbar, .app-nav-btn, .week-tabs, .time-picker-popover, .modal-backdrop');
+                if (excluded) return;
+                touchStartX=event.touches[0].clientX; touchStartY=event.touches[0].clientY; touchStartTime=Date.now();
+            }, {passive:true});
+            document.addEventListener('touchend', event => {
+                if (excluded || event.changedTouches.length !== 1) { excluded=false; return; }
+                const touch=event.changedTouches[0];
+                const dx=touch.clientX-touchStartX, dy=touch.clientY-touchStartY, elapsed=Date.now()-touchStartTime;
+                excluded=false;
+                if (Math.abs(dx)<60 || Math.abs(dx)<Math.abs(dy)*1.25 || elapsed>700) return;
+                const current=document.querySelector('.app-nav-btn.active')?.dataset.page || 'today';
+                const index=pages.indexOf(current); if (index<0) return;
+                const next=index+(dx<0?1:-1); if (next<0 || next>=pages.length) return;
+                showPage(pages[next], dx<0?'left':'right');
+            }, {passive:true});
+        }
+        window.setupSwipeNavigation = setupSwipeNavigation;
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('csda-theme');
+            const isDark = savedTheme ? savedTheme === 'dark' : !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) document.body.setAttribute('data-theme','dark'); else document.body.removeAttribute('data-theme');
+            syncThemeToggle();
+        }
+        function toggleTheme() {
+            const isDark=document.body.getAttribute('data-theme')==='dark';
+            if (isDark) { document.body.removeAttribute('data-theme'); localStorage.setItem('csda-theme','light'); }
+            else { document.body.setAttribute('data-theme','dark'); localStorage.setItem('csda-theme','dark'); }
+            syncThemeToggle();
+        }
+        function syncThemeToggle() { const toggle=document.getElementById('profile-theme-toggle'); if (toggle) toggle.checked=document.body.getAttribute('data-theme')==='dark'; }
+
+        function loadProfile() {
+            const name=localStorage.getItem('csda-profile-name')||'';
+            const roll=localStorage.getItem('csda-profile-roll')||'';
+            const notifications=localStorage.getItem('csda-notifications')==='true';
+            const tenMin=localStorage.getItem('csda-notify-10')!=='false';
+            const fiveMin=localStorage.getItem('csda-notify-5')==='true';
+            document.getElementById('profile-name').value=name;
+            document.getElementById('profile-roll').value=roll;
+            document.getElementById('notification-toggle').checked=notifications;
+            document.getElementById('notification-10-toggle').checked=tenMin;
+            document.getElementById('notification-5-toggle').checked=fiveMin;
+            updateNotificationTimingUI(); updateProfileUI();
+        }
+
+        function updateNotificationTimingUI() {
+            const enabled=document.getElementById('notification-toggle')?.checked;
+            document.querySelectorAll('.notification-timing-row').forEach(row=>row.classList.toggle('disabled',!enabled));
+            document.getElementById('notification-10-toggle').disabled=!enabled;
+            document.getElementById('notification-5-toggle').disabled=!enabled;
+        }
+
+        function updateProfileUI() {
+            const name=document.getElementById('profile-name').value.trim();
+            document.getElementById('profile-heading').textContent=name||'My Profile';
+            document.getElementById('profile-avatar').textContent=getInitials(name);
+            document.getElementById('app-user-title').textContent=name ? `Hi, ${name}` : (timetableMeta.name||timetableMeta.program||'Timetable');
+        }
+
+        const NOTIFICATION_ID_BASE=500000;
+        function getLocalNotificationsPlugin(){return window.Capacitor?.Plugins?.LocalNotifications||null;}
+        async function requestLocalNotificationPermission(){
+            const plugin=getLocalNotificationsPlugin();
+            if(!plugin){showToast('⚠️ Open the Android build to enable reminders.');return false;}
+            try{const current=await plugin.checkPermissions();if(current.display==='granted')return true;const requested=await plugin.requestPermissions();return requested.display==='granted';}
+            catch(error){console.error('Notification permission error:',error);return false;}
+        }
+        async function cancelClassNotifications(){
+            const plugin=getLocalNotificationsPlugin(); if(!plugin)return;
+            try{const pending=await plugin.getPending();const mine=(pending.notifications||[]).filter(n=>Number(n.id)>=NOTIFICATION_ID_BASE&&Number(n.id)<NOTIFICATION_ID_BASE+10000).map(n=>({id:Number(n.id)}));if(mine.length)await plugin.cancel({notifications:mine});}
+            catch(error){console.error('Cancel notification error:',error);}
+        }
+        function buildNotificationId(dayIndex,classIndex,offsetMinutes){return NOTIFICATION_ID_BASE+(dayIndex*1000)+(classIndex*10)+(offsetMinutes===10?1:2);}
+        function dateForDayAndTime(dayName,timeStr,daysAhead){
+            const now=new Date();const target=new Date(now);target.setHours(0,0,0,0);target.setDate(target.getDate()+daysAhead);
+            if(daysOfWeek[target.getDay()]!==dayName)return null;const minutes=parseTime(timeStr);if(!Number.isFinite(minutes))return null;target.setHours(Math.floor(minutes/60),minutes%60,0,0);return target;
+        }
+        async function scheduleClassNotifications(){
+            const plugin=getLocalNotificationsPlugin();if(!plugin||!hasScheduleData())return false;
+            if(localStorage.getItem('csda-notifications')!=='true')return false;
+            const tenMin=localStorage.getItem('csda-notify-10')!=='false';const fiveMin=localStorage.getItem('csda-notify-5')==='true';
+            if(!tenMin&&!fiveMin){await cancelClassNotifications();return true;}
+            if(!(await requestLocalNotificationPermission()))return false;
+            await cancelClassNotifications();
+            const now=new Date(),notifications=[],offsets=[];if(tenMin)offsets.push(10);if(fiveMin)offsets.push(5);
+            for(let daysAhead=0;daysAhead<7;daysAhead++){
+                const date=new Date(now);date.setHours(0,0,0,0);date.setDate(date.getDate()+daysAhead);const dayName=daysOfWeek[date.getDay()];const classes=timetable[dayName]||[];
+                classes.forEach((cls,classIndex)=>{const classDate=dateForDayAndTime(dayName,cls.start,daysAhead);if(!classDate)return;offsets.forEach(offset=>{const notifyAt=new Date(classDate.getTime()-offset*60000);if(notifyAt<=now)return;notifications.push({id:buildNotificationId(date.getDay(),classIndex,offset),title:`Class starts in ${offset} minutes`,body:`${cls.name} • ${cls.start}–${cls.end}`,largeBody:`${cls.name} starts in ${offset} minutes.\nClass time: ${cls.start}–${cls.end}`,summaryText:'Timetable • Class reminder',schedule:{at:notifyAt,allowWhileIdle:true},channelId:'class-reminders-v2',autoCancel:true,extra:{type:'class-reminder',day:dayName,offset}});});});
+            }
+            if(notifications.length)await plugin.schedule({notifications});
+            localStorage.setItem('csda-notification-last-scheduled',new Date().toISOString());return true;
+        }
+
+        function setupAppNavigation(){
+            document.querySelectorAll('.app-nav-btn').forEach(btn=>{if(btn.dataset.navigationBound==='true')return;btn.dataset.navigationBound='true';btn.addEventListener('click',()=>showPage(btn.dataset.page));});
+            document.getElementById('top-profile-btn')?.addEventListener('click',()=>showPage('profile'));
+            document.getElementById('profile-name')?.addEventListener('input',e=>{localStorage.setItem('csda-profile-name',e.target.value);updateProfileUI();});
+            document.getElementById('profile-roll')?.addEventListener('input',e=>localStorage.setItem('csda-profile-roll',e.target.value));
+            document.getElementById('profile-theme-toggle')?.addEventListener('change',toggleTheme);
+            document.getElementById('notification-toggle')?.addEventListener('change',async e=>{
+                const enabled=e.target.checked;localStorage.setItem('csda-notifications',String(enabled));updateNotificationTimingUI();
+                if(enabled){const ok=await requestLocalNotificationPermission();if(ok){await scheduleClassNotifications();showToast('🔔 Class notifications are on.');}else{e.target.checked=false;localStorage.setItem('csda-notifications','false');updateNotificationTimingUI();showToast('🔕 Notification permission was not granted.');}}
+                else{await cancelClassNotifications();showToast('🔕 Class notifications are off.');}
+            });
+            document.getElementById('notification-10-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-10',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'⏰ 10-minute reminders enabled.':'⏰ 10-minute reminders disabled.');});
+            document.getElementById('notification-5-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-5',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'⏰ 5-minute reminders enabled.':'⏰ 5-minute reminders disabled.');});
+            document.getElementById('import-timetable-btn')?.addEventListener('click',openImportPicker);
+            document.getElementById('export-timetable-btn')?.addEventListener('click',exportTimetableJSON);
+            document.getElementById('timetable-json-input')?.addEventListener('change',async e=>{const file=e.target.files?.[0];if(file)await importTimetableJSON(file);e.target.value='';});
+            document.querySelectorAll('.time-control').forEach(btn=>btn.addEventListener('click',()=>openTimePicker(btn.dataset.timeTarget)));
+            document.getElementById('time-picker-cancel')?.addEventListener('click',closeTimePicker);
+            document.getElementById('time-picker-done')?.addEventListener('click',commitTimePicker);
+            document.getElementById('time-picker-popover')?.addEventListener('click',e=>{const option=e.target.closest('.time-picker-option');if(!option)return;draftTime[option.dataset.timePart]=option.dataset.value;renderTimePickerOptions();});
+            document.getElementById('timetable-form')?.addEventListener('submit',handleTimetableForm);
+            document.getElementById('timetable-modal-close')?.addEventListener('click',closeTimetableModal);
+            document.getElementById('timetable-modal-cancel')?.addEventListener('click',closeTimetableModal);
+            document.getElementById('timetable-modal-backdrop')?.addEventListener('click',e=>{if(e.target.id==='timetable-modal-backdrop')closeTimetableModal();});
+            document.querySelectorAll('input[name="schedule-type"]').forEach(input=>input.addEventListener('change',updateScheduleDaysVisibility));
+            document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTimetableModal();});
+        }
+
+        let lastRenderedDateKey = getDateKey();
+
+        function refreshDateSensitiveTimetable() {
+            const currentDateKey = getDateKey();
+            if (currentDateKey === lastRenderedDateKey) return false;
+
+            lastRenderedDateKey = currentDateKey;
+            cleanupExpiredSchedules();
+            rebuildTimetable(new Date());
+            renderHeaderAndTitles();
+            renderTodayClasses();
+            renderWeeklyTimetable();
+            renderSubjects();
+            if (localStorage.getItem('csda-notifications') === 'true') {
+                scheduleClassNotifications().catch(console.error);
+            }
+            return true;
+        }
+
+        function init(){
+            initTheme();loadTimetableData();lastRenderedDateKey=getDateKey();renderHeaderAndTitles();renderTodayClasses();renderWeeklyTimetable();renderSubjects();loadProfile();setupAppNavigation();setupSwipeNavigation();
+            setTimeout(()=>{if(localStorage.getItem('csda-notifications')==='true')scheduleClassNotifications().catch(console.error);},500);
+            setInterval(()=>{
+                if (!refreshDateSensitiveTimetable() && hasScheduleData()) updateClassStatus();
+            },60000);
+        }
+
+        window.addEventListener('DOMContentLoaded',init);
+    </script>
+
+    <div class="modal-backdrop" id="timetable-modal-backdrop" aria-hidden="true">
+        <div class="timetable-modal" role="dialog" aria-modal="true" aria-labelledby="timetable-modal-title">
+            <div class="modal-header">
+                <h3 id="timetable-modal-title">Add timetable class</h3>
+                <button class="modal-close" id="timetable-modal-close" type="button" aria-label="Close">×</button>
+            </div>
+            <form id="timetable-form">
+                <div class="form-group">
+                    <label for="schedule-code">Subject code <span style="font-weight:500;opacity:.7;">(optional)</span></label>
+                    <input class="form-control" id="schedule-code" placeholder="e.g. CS101" maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label for="schedule-name">Subject / topic</label>
+                    <input class="form-control" id="schedule-name" placeholder="Enter subject or topic name" maxlength="100" required>
+                </div>
+                <div class="form-group" id="schedule-days-group">
+                    <label>Days</label>
+                    <div class="day-picker">
+                        <label class="day-choice"><input type="checkbox" value="Monday"><span>Mon</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Tuesday"><span>Tue</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Wednesday"><span>Wed</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Thursday"><span>Thu</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Friday"><span>Fri</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Saturday"><span>Sat</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Sunday"><span>Sun</span></label>
+                    </div>
+                </div>
+                <div class="time-fields">
+                    <div class="form-group">
+                        <label>Start</label>
+                        <button class="time-control" id="schedule-start-display" type="button" data-time-target="start" aria-label="Select start time">Select time</button>
+                        <input id="schedule-start" type="hidden">
+                    </div>
+                    <div class="form-group">
+                        <label>End</label>
+                        <button class="time-control" id="schedule-end-display" type="button" data-time-target="end" aria-label="Select end time">Select time</button>
+                        <input id="schedule-end" type="hidden">
+                    </div>
+                </div>
+                <div class="time-picker-popover" id="time-picker-popover" aria-hidden="true">
+                    <div class="time-picker-title">Select time</div>
+                    <div class="time-picker-columns">
+                        <div class="time-picker-column" id="time-hours"></div>
+                        <div class="time-picker-column" id="time-minutes"></div>
+                        <div class="time-picker-column" id="time-meridiem"></div>
+                    </div>
+                    <div class="time-picker-actions">
+                        <button type="button" class="time-picker-cancel" id="time-picker-cancel">Cancel</button>
+                        <button type="button" class="time-picker-done" id="time-picker-done">Done</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <div class="repeat-options">
+                        <label class="repeat-option"><input type="radio" name="schedule-type" value="today"><span>Only Today</span></label>
+                        <label class="repeat-option"><input type="radio" name="schedule-type" value="this_week"><span>This Week</span></label>
+                        <label class="repeat-option"><input type="radio" name="schedule-type" value="this_month"><span>This Month</span></label>
+                        <label class="repeat-option"><input type="radio" name="schedule-type" value="permanent" checked><span>Permanent</span></label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn secondary" id="timetable-modal-cancel" type="button">Cancel</button>
+                    <button class="modal-btn primary" type="submit">Save class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div
+        id="appToast"
+        class="temporary-toast"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+    <script id="capacitor-notification-bridge">
+        (function () {
+            function getPlugin() {
+                try {
+                    return window.Capacitor &&
+                        window.Capacitor.Plugins &&
+                        window.Capacitor.Plugins.LocalNotifications
+                        ? window.Capacitor.Plugins.LocalNotifications
+                        : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            window.requestTimetableNotificationPermission =
+                async function () {
+                    const plugin = getPlugin();
+
+                    if (!plugin) {
+                        return {
+                            granted: false,
+                            unavailable: true
+                        };
+                    }
+
+                    try {
+                        const result =
+                            await plugin.requestPermissions();
+
+                        const granted =
+                            result &&
+                            (
+                                result.display === 'granted' ||
+                                result.display === 'provisional'
+                            );
+
+                        return {
+                            granted,
+                            unavailable: false,
+                            result
+                        };
+
+                    } catch (error) {
+                        console.error(
+                            'Notification permission request failed:',
+                            error
+                        );
+
+                        return {
+                            granted: false,
+                            unavailable: false,
+                            error
+                        };
+                    }
+                };
+
+            window.checkTimetableNotificationPermission =
+                async function () {
+                    const plugin = getPlugin();
+
+                    if (!plugin) {
+                        return {
+                            granted: false,
+                            unavailable: true
+                        };
+                    }
+
+                    try {
+                        const result =
+                            await plugin.checkPermissions();
+
+                        const granted =
+                            result &&
+                            (
+                                result.display === 'granted' ||
+                                result.display === 'provisional'
+                            );
+
+                        return {
+                            granted,
+                            unavailable: false,
+                            result
+                        };
+
+                    } catch (error) {
+                        console.error(
+                            'Notification permission check failed:',
+                            error
+                        );
+
+                        return {
+                            granted: false,
+                            unavailable: false,
+                            error
+                        };
+                    }
+                };
+        })();
+    </script>
+
+    <script id="temporary-toast-script">
+        (function () {
+            let toastTimer = null;
+
+            function getToast() {
+                return document.querySelector('#appToast') ||
+                    document.querySelector('.temporary-toast');
+            }
+
+            window.showToast = function showToast(message) {
+                const toast = getToast();
+                if (!toast) return;
+                toast.textContent = message;
+                toast.classList.remove('show');
+                void toast.offsetWidth;
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            function getState(el) {
+                if (!el) return false;
+                if (typeof el.checked === 'boolean') return el.checked;
+                const aria = el.getAttribute('aria-checked');
+                if (aria !== null) return aria === 'true';
+                return el.classList.contains('active') ||
+                    el.classList.contains('on') ||
+                    el.classList.contains('enabled');
+            }
+
+            function getSettingLabel(el) {
+                const root = el.closest(
+                    'label, .setting, .setting-row, .settings-item, .profile-setting, ' +
+                    '.toggle-row, .notification-option, li, .card'
+                );
+                const text = (root ? root.textContent : el.parentElement?.textContent || '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+
+                if (/10\s*(?:-|–|—)?\s*min|10\s*minute/.test(text)) return '10';
+                if (/5\s*(?:-|–|—)?\s*min|5\s*minute/.test(text)) return '5';
+                if (/notification/.test(text)) return 'main';
+                return null;
+            }
+        })();
+    </script>
+
+
+    <script id="notificationPermissionGuard">
+        (function () {
+            let permissionInProgress = false;
+
+            function looksLikeMainNotificationToggle(el) {
+                if (!el) return false;
+                const row = el.closest(
+                    'label, .setting, .setting-row, .settings-item, .profile-setting, ' +
+                    '.toggle-row, .notification-option, li, .card'
+                );
+                const text = (row ? row.textContent : el.parentElement?.textContent || '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+
+                if (/10\s*(?:-|–|—)?\s*min|10\s*minute/.test(text)) return false;
+                if (/5\s*(?:-|–|—)?\s*min|5\s*minute/.test(text)) return false;
+
+                return /class notifications?|notifications?/.test(text);
+            }
+
+            document.addEventListener('change', async function (event) {
+                const el = event.target;
+                if (!looksLikeMainNotificationToggle(el)) return;
+                if (permissionInProgress) return;
+
+                const enabled = !!el.checked;
+                if (!enabled) return;
+
+                permissionInProgress = true;
+                try {
+                    const result = await requestTimetableNotificationPermission();
+                    if (!result.granted) {
+                        el.checked = false;
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                        showToast(result.unavailable
+                            ? '📱 Open this as the Android app to enable notifications.'
+                            : '🔕 Notification permission denied. Enable it in Android Settings.');
+                    }
+                } finally {
+                    permissionInProgress = false;
+                }
+            }, true);
+        })();
+    </script>
+
+
+    <script id="notification-permission-sync">
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                const result = await checkTimetableNotificationPermission();
+                if (result.unavailable) return;
+
+                if (!result.granted) {
+                    const candidates = Array.from(document.querySelectorAll(
+                        'input[type="checkbox"], [role="switch"], .toggle, .switch'
+                    ));
+                    for (const el of candidates) {
+                        const row = el.closest(
+                            'label, .setting, .setting-row, .settings-item, .profile-setting, ' +
+                            '.toggle-row, .notification-option, li, .card'
+                        );
+                        const text = (row ? row.textContent : el.parentElement?.textContent || '')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .toLowerCase();
+                        if (/notification/.test(text) &&
+                            !/5\s*(?:-|–|—)?\s*min|5\s*minute|10\s*(?:-|–|—)?\s*min|10\s*minute/.test(text)) {
+                            if ('checked' in el) el.checked = false;
+                            el.setAttribute('aria-checked', 'false');
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Notification permission sync skipped:', e);
+            }
+        });
+    </script>
+
+    <script id="navigation-fallback">
+        (function () {
+            function bindNavigation() {
+                try {
+                    if (!window.__csdaClickNavigationBound) {
+                        window.__csdaClickNavigationBound = true;
+                        document.addEventListener('click', function (event) {
+                            var btn = event.target && event.target.closest
+                                ? event.target.closest('.app-nav-btn')
+                                : null;
+                            if (!btn) return;
+                            var page = btn.dataset.page;
+                            if (page && typeof window.showPage === 'function') {
+                                event.preventDefault();
+                                window.showPage(page);
+                            }
+                        }, false);
+                    }
+
+                    if (!window.__csdaSwipeNavigationBound) {
+                        if (typeof window.setupSwipeNavigation === 'function') {
+                            window.setupSwipeNavigation();
+                        } else {
+                            var pages = ['today', 'week', 'subjects', 'profile'];
+                            var startX = 0, startY = 0, startTime = 0, excluded = false;
+                            document.addEventListener('touchstart', function (e) {
+                                if (!e.touches || e.touches.length !== 1) return;
+                                var t = e.touches[0];
+                                var target = e.target;
+                                excluded = !!(target && target.closest && target.closest('.app-topbar, .app-nav-btn, .week-tabs, .week-tab'));
+                                if (excluded) return;
+                                startX = t.clientX;
+                                startY = t.clientY;
+                                startTime = Date.now();
+                            }, {passive:true});
+                            document.addEventListener('touchend', function (e) {
+                                if (excluded || !e.changedTouches || e.changedTouches.length !== 1) { excluded = false; return; }
+                                var t = e.changedTouches[0];
+                                var dx = t.clientX - startX;
+                                var dy = t.clientY - startY;
+                                var elapsed = Date.now() - startTime;
+                                excluded = false;
+                                if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.25 || elapsed > 700) return;
+                                var active = document.querySelector('.app-nav-btn.active');
+                                var current = active ? active.dataset.page : 'today';
+                                var index = pages.indexOf(current);
+                                if (index < 0) return;
+                                var next = index + (dx < 0 ? 1 : -1);
+                                if (next < 0 || next >= pages.length) return;
+                                if (typeof window.showPage === 'function') window.showPage(pages[next], dx < 0 ? 'left' : 'right');
+                            }, {passive:true});
+                        }
+                    }
+                } catch (error) {
+                    console.error('Navigation binding failed:', error);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindNavigation, {once:true});
+            } else {
+                bindNavigation();
+            }
+        })();
+    </script>
+
+</body>
+
+</html>
