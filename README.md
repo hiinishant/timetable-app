@@ -4,7 +4,7 @@ A simple and lightweight timetable app for students.
 
 ##  Download
 
-[Download TimeTable APK](https://github.com/hiinishant/timetable-app/releases/tag/v1.0.0)
+[Download TimeTable APK](https://github.com/hiinishant/timetable-app/releases/tag/v1.1.0)
 
 ##  Features
 
