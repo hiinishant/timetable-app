@@ -1490,7 +1490,6 @@
                 rows.forEach(addRow);
             };
 
-            // Format: { timetable: { days: [{ day, periods: [...] }] } }
             const addDayPeriodRows = container => {
                 if (!container || typeof container !== 'object' || Array.isArray(container) || !Array.isArray(container.days)) return;
                 container.days.forEach(dayBlock => {
@@ -1504,8 +1503,6 @@
                 });
             };
 
-            // Generic nested scan: if an object contains a recognizable timetable row,
-            // capture it even when it is wrapped in an unfamiliar container name.
             const looksLikeScheduleRow = obj => {
                 if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
                 const hasTime = !!(firstValue(obj, ['start','startTime','start_time','from','begin','beginTime','startsAt','end','endTime','end_time','to','finish','finishTime','endsAt','time','timeRange','timing','slot','period']));
@@ -1567,7 +1564,6 @@
                 addRows(rowsFromScheduleObject(container));
             }
 
-            // Last-resort structural detection for sensible but unknown wrappers.
             walk(data);
             return candidates;
         }
@@ -1713,8 +1709,6 @@
             if (!item || !Array.isArray(item.days)) return [];
             if (!isScheduleActive(item, date)) return [];
 
-            // "Only Today" is always restricted to the actual current weekday.
-            // This also protects against malformed/imported data that lists multiple days.
             if (item.type === 'today') {
                 return [daysOfWeek[date.getDay()]];
             }
@@ -1793,11 +1787,7 @@
         function loadTimetableData() {
             const version = Number(localStorage.getItem('csda-data-version') || 0);
 
-            // Version 3 intentionally starts with a blank timetable. This clears the
-            // old built-in Semester III data once when the new generic app is installed.
             if (version < 3) {
-                // Version 3 was the one-time migration that removed the old built-in
-                // Semester III timetable. Later versions must preserve user data.
                 localStorage.removeItem('csda-base-timetable');
                 localStorage.removeItem('csda-custom-schedules');
                 localStorage.removeItem('csda-subject-overrides');
@@ -1819,8 +1809,6 @@
                 customSchedules = Array.isArray(stored) ? stored.filter(isValidSchedule) : [];
             } catch { customSchedules = []; }
 
-            // Older builds could place imported temporary schedules in baseTimetable.
-            // Move them to customSchedules so their Today/Week/Month expiry is honored.
             const migratedTemporary = [];
             daysOfWeek.forEach(day => {
                 const keep = [];
@@ -1878,8 +1866,6 @@
             if (weekHeading) weekHeading.textContent = hasData ? 'Your weekly schedule' : 'No timetable yet';
             if (subjectsHeading) subjectsHeading.textContent = hasData ? 'Your timetable subjects' : 'Add a timetable to see subjects';
 
-            // Keep the area below the Today heading clean once a timetable exists.
-            // The date pill is enough context there; the metadata line is only useful on an empty app.
             const todayName = document.getElementById('today-name-display');
             if (todayName) {
                 const showEmptyHint = !hasData;
@@ -1941,7 +1927,7 @@
         function removeAddedSchedule(scheduleId) {
             const item = customSchedules.find(x => x.id === scheduleId);
             if (!item || item.source !== 'added') {
-                showToast('⚠️ Only manually added classes can be removed.');
+                showToast('Only manually added classes can be removed.');
                 return;
             }
             customSchedules = customSchedules.filter(x => x.id !== scheduleId);
@@ -1949,7 +1935,7 @@
             rebuildTimetable();
             renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI();
             if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
-            showToast(`🗑️ ${item.name} removed from timetable.`);
+            showToast(`${item.name} removed from timetable.`);
         }
 
         function editSubject(originalCode) {
@@ -1962,11 +1948,11 @@
             if (code === null) return;
             const name = prompt('Subject name:', currentName);
             if (name === null) return;
-            if (!code.trim() || !name.trim()) { showToast('⚠️ Subject code and name are required.'); return; }
+            if (!code.trim() || !name.trim()) { showToast('Subject code and name are required.'); return; }
             subjectOverrides[originalCode] = { code:code.trim(), name:name.trim() };
             saveTimetableData(); rebuildTimetable(); renderSubjects(); renderTodayClasses(); renderWeeklyTimetable();
             if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
-            showToast('✅ Subject updated.');
+            showToast('Subject updated.');
         }
 
         function updateScheduleDaysVisibility() {
@@ -2062,11 +2048,11 @@
             const end24 = document.getElementById('schedule-end').value;
             let days = [...document.querySelectorAll('.day-choice input:checked')].map(x => x.value);
 
-            if (!topic) { showToast('⚠️ Enter a subject or topic name.'); return; }
-            if (!start24 || !end24) { showToast('⚠️ Select both start and end times.'); return; }
-            if (parseTime(start24) >= parseTime(end24)) { showToast('⚠️ End time must be after start time.'); return; }
+            if (!topic) { showToast('Enter a subject or topic name.'); return; }
+            if (!start24 || !end24) { showToast('Select both start and end times.'); return; }
+            if (parseTime(start24) >= parseTime(end24)) { showToast('End time must be after start time.'); return; }
             if (type === 'today') days = [daysOfWeek[new Date().getDay()]];
-            else if (!days.length) { showToast('⚠️ Select at least one day.'); return; }
+            else if (!days.length) { showToast('Select at least one day.'); return; }
 
             const now = new Date();
             const item = {
@@ -2085,7 +2071,7 @@
             if (code && !subjectCatalog[code]) subjectCatalog[code] = { code, name:topic, faculty:'', room:'', type:'', groups:[] };
             saveTimetableData(); rebuildTimetable(); renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI(); closeTimetableModal();
             if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
-            showToast('✅ Class added to timetable.');
+            showToast('Class added to timetable.');
         }
 
         function openImportPicker() {
@@ -2095,7 +2081,7 @@
 
         function exportTimetableJSON() {
             if (!hasScheduleData()) {
-                showToast('⚠️ Add or import a timetable before exporting.');
+                showToast('Add or import a timetable before exporting.');
                 return;
             }
 
@@ -2143,7 +2129,7 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
-            showToast('📤 Timetable JSON exported.');
+            showToast('Timetable JSON exported.');
         }
 
         async function importTimetableJSON(file) {
@@ -2195,7 +2181,6 @@
                 subjectCatalog = extractSubjectCatalog(data);
                 timetableMeta = {...extractMetadata(data)};
 
-                // Fill the subject catalog from schedule entries when the JSON has no subjects object.
                 imported.forEach(item => {
                     if (!item.code) return;
                     if (!subjectCatalog[item.code]) {
@@ -2216,10 +2201,10 @@
                 updateTimetableMetaUI();
 
                 if (localStorage.getItem('csda-notifications') === 'true') await scheduleClassNotifications().catch(console.error);
-                showToast(`✅ Imported ${imported.length} timetable entr${imported.length === 1 ? 'y' : 'ies'}.`);
+                showToast(`Imported ${imported.length} timetable entr${imported.length === 1 ? 'y' : 'ies'}.`);
             } catch (error) {
                 console.error(error);
-                showToast(`⚠️ Import failed: ${error.message || 'Invalid JSON file.'}`);
+                showToast(`Import failed: ${error.message || 'Invalid JSON file.'}`);
             }
         }
 
@@ -2444,7 +2429,7 @@
         function getLocalNotificationsPlugin(){return window.Capacitor?.Plugins?.LocalNotifications||null;}
         async function requestLocalNotificationPermission(){
             const plugin=getLocalNotificationsPlugin();
-            if(!plugin){showToast('⚠️ Open the Android build to enable reminders.');return false;}
+            if(!plugin){showToast('Open the Android build to enable reminders.');return false;}
             try{const current=await plugin.checkPermissions();if(current.display==='granted')return true;const requested=await plugin.requestPermissions();return requested.display==='granted';}
             catch(error){console.error('Notification permission error:',error);return false;}
         }
@@ -2468,7 +2453,7 @@
             const now=new Date(),notifications=[],offsets=[];if(tenMin)offsets.push(10);if(fiveMin)offsets.push(5);
             for(let daysAhead=0;daysAhead<7;daysAhead++){
                 const date=new Date(now);date.setHours(0,0,0,0);date.setDate(date.getDate()+daysAhead);const dayName=daysOfWeek[date.getDay()];const classes=timetable[dayName]||[];
-                classes.forEach((cls,classIndex)=>{const classDate=dateForDayAndTime(dayName,cls.start,daysAhead);if(!classDate)return;offsets.forEach(offset=>{const notifyAt=new Date(classDate.getTime()-offset*60000);if(notifyAt<=now)return;notifications.push({id:buildNotificationId(date.getDay(),classIndex,offset),title:`Class starts in ${offset} minutes`,body:`${cls.name} • ${cls.start}–${cls.end}`,largeBody:`${cls.name} starts in ${offset} minutes.\nClass time: ${cls.start}–${cls.end}`,summaryText:'Timetable • Class reminder',schedule:{at:notifyAt,allowWhileIdle:true},channelId:'class-reminders-v2',autoCancel:true,extra:{type:'class-reminder',day:dayName,offset}});});});
+                classes.forEach((cls,classIndex)=>{const classDate=dateForDayAndTime(dayName,cls.start,daysAhead);if(!classDate)return;offsets.forEach(offset=>{const notifyAt=new Date(classDate.getTime()-offset*60000);if(notifyAt<=now)return;notifications.push({id:buildNotificationId(date.getDay(),classIndex,offset),title:`Class starts in ${offset} minutes`,body:`${cls.name} • ${cls.start}–${cls.end}`,largeBody:`${cls.name} starts in ${offset} minutes.\nClass time: ${cls.start}–${cls.end}`,summaryText:'Timetable • Class reminder',schedule:{at:notifyAt,allowWhileIdle:true},channelId:'class-reminders-v2',smallIcon:'ic_notification',autoCancel:true,extra:{type:'class-reminder',day:dayName,offset}});});});
             }
             if(notifications.length)await plugin.schedule({notifications});
             localStorage.setItem('csda-notification-last-scheduled',new Date().toISOString());return true;
@@ -2482,11 +2467,11 @@
             document.getElementById('profile-theme-toggle')?.addEventListener('change',toggleTheme);
             document.getElementById('notification-toggle')?.addEventListener('change',async e=>{
                 const enabled=e.target.checked;localStorage.setItem('csda-notifications',String(enabled));updateNotificationTimingUI();
-                if(enabled){const ok=await requestLocalNotificationPermission();if(ok){await scheduleClassNotifications();showToast('🔔 Class notifications are on.');}else{e.target.checked=false;localStorage.setItem('csda-notifications','false');updateNotificationTimingUI();showToast('🔕 Notification permission was not granted.');}}
-                else{await cancelClassNotifications();showToast('🔕 Class notifications are off.');}
+                if(enabled){const ok=await requestLocalNotificationPermission();if(ok){await scheduleClassNotifications();showToast('Class notifications are on.');}else{e.target.checked=false;localStorage.setItem('csda-notifications','false');updateNotificationTimingUI();showToast('Notification permission was not granted.');}}
+                else{await cancelClassNotifications();showToast('Class notifications are off.');}
             });
-            document.getElementById('notification-10-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-10',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'⏰ 10-minute reminders enabled.':'⏰ 10-minute reminders disabled.');});
-            document.getElementById('notification-5-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-5',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'⏰ 5-minute reminders enabled.':'⏰ 5-minute reminders disabled.');});
+            document.getElementById('notification-10-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-10',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'10-minute reminders enabled.':'10-minute reminders disabled.');});
+            document.getElementById('notification-5-toggle')?.addEventListener('change',async e=>{localStorage.setItem('csda-notify-5',String(e.target.checked));if(document.getElementById('notification-toggle').checked)await scheduleClassNotifications();showToast(e.target.checked?'5-minute reminders enabled.':'5-minute reminders disabled.');});
             document.getElementById('import-timetable-btn')?.addEventListener('click',openImportPicker);
             document.getElementById('export-timetable-btn')?.addEventListener('click',exportTimetableJSON);
             document.getElementById('timetable-json-input')?.addEventListener('change',async e=>{const file=e.target.files?.[0];if(file)await importTimetableJSON(file);e.target.value='';});
@@ -2792,8 +2777,8 @@
                         el.checked = false;
                         el.dispatchEvent(new Event('change', { bubbles: true }));
                         showToast(result.unavailable
-                            ? '📱 Open this as the Android app to enable notifications.'
-                            : '🔕 Notification permission denied. Enable it in Android Settings.');
+                            ? 'Open this as the Android app to enable notifications.'
+                            : 'Notification permission denied. Enable it in Android Settings.');
                     }
                 } finally {
                     permissionInProgress = false;
