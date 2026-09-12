@@ -2023,6 +2023,7 @@
             container.innerHTML = subjects.map(subject => {
                 const details = [subject.faculty, subject.room].filter(Boolean).join(' • ');
 
+                // Show the remove button only for manually added schedules.
                 const customItem = customSchedules.find(item =>
                     item &&
                     item.source === 'added' &&
@@ -2071,6 +2072,22 @@
                 return;
             }
             customSchedules = customSchedules.filter(x => x.id !== scheduleId);
+
+            if (item.code) {
+                const codeKey = String(item.code).trim();
+                const catalogEntry = subjectCatalog[codeKey];
+                const usedByBase = Object.values(baseTimetable).flat().some(cls =>
+                    cls && String(cls.code || '').trim() === codeKey
+                );
+                const usedByOtherCustom = customSchedules.some(cls =>
+                    cls && String(cls.code || '').trim() === codeKey
+                );
+                if (catalogEntry && !usedByBase && !usedByOtherCustom &&
+                    String(catalogEntry.name || '').trim() === String(item.name || '').trim()) {
+                    delete subjectCatalog[codeKey];
+                }
+            }
+
             saveTimetableData();
             rebuildTimetable();
             renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI();
@@ -2217,6 +2234,7 @@
             if (hidden) hidden.value = value;
             if (display) display.textContent = `${draftTime.hour}:${draftTime.minute} ${draftTime.meridiem}`;
 
+            // If the start time changes, clear an end time that is no longer valid.
             if (activeTimeTarget === 'start') {
                 const endMinutes = parseTime(document.getElementById('schedule-end')?.value || '');
                 if (Number.isFinite(endMinutes) && endMinutes <= selectedMinutes) {
@@ -2351,7 +2369,7 @@
                 source:'added'
             };
             customSchedules.push(item);
-            if (code && !subjectCatalog[code]) subjectCatalog[code] = { code, name:topic, faculty:'', room:'', type:'', groups:[] };
+            if (code && !subjectCatalog[code]) subjectCatalog[code] = { code, name:topic, faculty:'', room:'', type:'', groups:[], source:'added' };
             saveTimetableData(); rebuildTimetable(); renderSubjects(); renderTodayClasses(); renderWeeklyTimetable(); updateTimetableMetaUI(); closeTimetableModal();
             if (localStorage.getItem('csda-notifications') === 'true') scheduleClassNotifications().catch(console.error);
             showToast('Class added to timetable.');
@@ -2739,7 +2757,7 @@
             const now=new Date(),notifications=[],offsets=[];if(tenMin)offsets.push(10);if(fiveMin)offsets.push(5);
             for(let daysAhead=0;daysAhead<7;daysAhead++){
                 const date=new Date(now);date.setHours(0,0,0,0);date.setDate(date.getDate()+daysAhead);const dayName=daysOfWeek[date.getDay()];const classes=timetable[dayName]||[];
-                classes.forEach((cls,classIndex)=>{const classDate=dateForDayAndTime(dayName,cls.start,daysAhead);if(!classDate)return;offsets.forEach(offset=>{const notifyAt=new Date(classDate.getTime()-offset*60000);if(notifyAt<=now)return;notifications.push({id:buildNotificationId(date.getDay(),classIndex,offset),title:`Class starts in ${offset} minutes`,body:`${cls.name} • ${cls.start}–${cls.end}`,largeBody:`${cls.name} starts in ${offset} minutes.\nClass time: ${cls.start}–${cls.end}`,summaryText:'Timetable • Class reminder',schedule:{at:notifyAt,allowWhileIdle:true},channelId:'class-reminders-v2',smallIcon:'ic_notification',autoCancel:true,extra:{type:'class-reminder',day:dayName,offset}});});});
+                classes.forEach((cls,classIndex)=>{const classDate=dateForDayAndTime(dayName,cls.start,daysAhead);if(!classDate)return;offsets.forEach(offset=>{const notifyAt=new Date(classDate.getTime()-offset*60000);if(notifyAt<=now)return;notifications.push({id:buildNotificationId(date.getDay(),classIndex,offset),title:'Schedule',body:`Class starts in ${offset} minutes • ${cls.name} • ${cls.start}–${cls.end}`,largeBody:`${cls.name} starts in ${offset} minutes.\nClass time: ${cls.start}–${cls.end}`,summaryText:'Timetable • Class reminder',schedule:{at:notifyAt,allowWhileIdle:true},channelId:'class-reminders-v2',smallIcon:'ic_notification',autoCancel:true,extra:{type:'class-reminder',day:dayName,offset}});});});
             }
             if(notifications.length)await plugin.schedule({notifications});
             localStorage.setItem('csda-notification-last-scheduled',new Date().toISOString());return true;
