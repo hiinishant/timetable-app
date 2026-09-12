@@ -1061,6 +1061,11 @@
             background:transparent; color:var(--text-secondary); font:700 12px var(--font-main); cursor:pointer;
         }
         .time-picker-option:hover, .time-picker-option.selected { background:rgba(63,191,148,.12); color:var(--accent-color); }
+        .time-picker-option.disabled {
+            opacity:.22;
+            cursor:not-allowed;
+            pointer-events:none;
+        }
         .time-picker-actions { display:flex; gap:7px; margin-top:9px; }
         .time-picker-actions button { flex:1; padding:9px; border-radius:9px; font:700 11px var(--font-main); border:1px solid var(--border-color); cursor:pointer; }
         .time-picker-cancel { background:var(--card-bg); color:var(--text-primary); }
@@ -1082,6 +1087,114 @@
             .profile-input {
                 max-width: 48%;
             }
+        }
+    </style>
+
+    <style id="custom-confirm-style">
+        .confirm-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, .48);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+        }
+
+        .confirm-backdrop.open {
+            display: flex;
+        }
+
+        .confirm-modal {
+            width: min(100%, 360px);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, .32);
+            animation: confirmIn .18s ease;
+        }
+
+        @keyframes confirmIn {
+            from { opacity: 0; transform: translateY(8px) scale(.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .confirm-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 13px;
+            border-radius: 12px;
+            background: rgba(63, 191, 148, .12);
+            border: 1px solid rgba(63, 191, 148, .22);
+            color: var(--accent-color);
+        }
+
+        .confirm-icon svg { width: 21px; height: 21px; }
+
+        .confirm-modal h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .confirm-modal p {
+            margin: 7px 0 0;
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--text-secondary);
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 19px;
+        }
+
+        .confirm-btn {
+            flex: 1;
+            padding: 10px 13px;
+            border-radius: 10px;
+            font: 700 12px var(--font-main);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .confirm-btn.cancel {
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .confirm-btn.cancel:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .confirm-btn.confirm {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .confirm-btn.confirm:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        body[data-theme="dark"] .confirm-backdrop {
+            background: rgba(0, 0, 0, .62);
+        }
+
+        body[data-theme="dark"] .confirm-modal {
+            box-shadow: 0 25px 70px rgba(0, 0, 0, .55), 0 0 35px rgba(63, 191, 148, .05);
         }
     </style>
 
@@ -1909,11 +2022,30 @@
 
             container.innerHTML = subjects.map(subject => {
                 const details = [subject.faculty, subject.room].filter(Boolean).join(' • ');
+
+                const customItem = customSchedules.find(item =>
+                    item &&
+                    item.source === 'added' &&
+                    (
+                        (subject.code && String(item.code || '').trim() === String(subject.code).trim()) ||
+                        (!subject.code && String(item.name || '').trim() === String(subject.name).trim())
+                    )
+                );
+
                 return `
-                    <div class="subject-item">
+                    <div class="subject-item ${customItem ? 'custom-subject-item' : ''}">
                         ${subject.code ? `<span class="subject-code">${escapeHTML(subject.code)}</span>` : ''}
                         <span class="subject-name">${escapeHTML(subject.name)}</span>
                         ${details ? `<span class="subject-details">${escapeHTML(details)}</span>` : ''}
+                        ${customItem ? `
+                            <button
+                                type="button"
+                                class="remove-schedule-btn"
+                                data-remove-schedule="${escapeHTML(customItem.id)}"
+                                aria-label="Remove ${escapeHTML(subject.name)} schedule">
+                                ×
+                            </button>
+                        ` : ''}
                     </div>`;
             }).join('') + `
                 <button class="subject-item add-schedule-card" type="button" id="add-schedule-card">
@@ -1922,6 +2054,14 @@
                 </button>`;
 
             document.getElementById('add-schedule-card')?.addEventListener('click', openTimetableModal);
+
+            container.querySelectorAll('[data-remove-schedule]').forEach(button => {
+                button.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeAddedSchedule(button.dataset.removeSchedule);
+                });
+            });
         }
 
         function removeAddedSchedule(scheduleId) {
@@ -1968,21 +2108,79 @@
 
         let activeTimeTarget = null;
         let draftTime = { hour:'08', minute:'00', meridiem:'AM' };
+        let timetableModalTrigger = null;
+
+        function getDraftTimeMinutes() {
+            let h = Number(draftTime.hour) % 12;
+            if (draftTime.meridiem === 'PM') h += 12;
+            return h * 60 + Number(draftTime.minute);
+        }
+
+        function getStartTimeMinutes() {
+            return parseTime(document.getElementById('schedule-start')?.value || '');
+        }
+
+        function isEndTimeAllowed(minutes) {
+            if (activeTimeTarget !== 'end') return true;
+            const startMinutes = getStartTimeMinutes();
+            return !Number.isFinite(startMinutes) || minutes > startMinutes;
+        }
 
         function renderTimePickerOptions() {
             const hours = document.getElementById('time-hours');
             const minutes = document.getElementById('time-minutes');
             const meridiem = document.getElementById('time-meridiem');
             if (!hours || !minutes || !meridiem) return;
-            hours.innerHTML = Array.from({length:12}, (_,i) => { const v=String(i+1).padStart(2,'0'); return `<button type="button" class="time-picker-option ${draftTime.hour===v?'selected':''}" data-time-part="hour" data-value="${v}">${v}</button>`; }).join('');
-            minutes.innerHTML = Array.from({length:60}, (_,i) => { const v=String(i).padStart(2,'0'); return `<button type="button" class="time-picker-option ${draftTime.minute===v?'selected':''}" data-time-part="minute" data-value="${v}">${v}</button>`; }).join('');
-            meridiem.innerHTML = ['AM','PM'].map(v => `<button type="button" class="time-picker-option ${draftTime.meridiem===v?'selected':''}" data-time-part="meridiem" data-value="${v}">${v}</button>`).join('');
+
+            const hourDisabled = hour => {
+                if (activeTimeTarget !== 'end') return false;
+                return !Array.from({length:60}, (_,minute) =>
+                    isEndTimeAllowed((Number(hour) % 12 + (draftTime.meridiem === 'PM' ? 12 : 0)) * 60 + minute)
+                ).some(Boolean);
+            };
+            const minuteDisabled = minute => {
+                if (activeTimeTarget !== 'end') return false;
+                return !isEndTimeAllowed((Number(draftTime.hour) % 12 + (draftTime.meridiem === 'PM' ? 12 : 0)) * 60 + minute);
+            };
+            const meridiemDisabled = value => {
+                if (activeTimeTarget !== 'end') return false;
+                const h = Number(draftTime.hour) % 12 + (value === 'PM' ? 12 : 0);
+                return !isEndTimeAllowed(h * 60 + Number(draftTime.minute));
+            };
+
+            hours.innerHTML = Array.from({length:12}, (_,i) => {
+                const v=String(i+1).padStart(2,'0');
+                const disabled=hourDisabled(i+1);
+                return `<button type="button" class="time-picker-option ${draftTime.hour===v?'selected ':''}${disabled?'disabled':''}" data-time-part="hour" data-value="${v}" ${disabled?'disabled':''}>${v}</button>`;
+            }).join('');
+
+            minutes.innerHTML = Array.from({length:60}, (_,i) => {
+                const v=String(i).padStart(2,'0');
+                const disabled=minuteDisabled(i);
+                return `<button type="button" class="time-picker-option ${draftTime.minute===v?'selected ':''}${disabled?'disabled':''}" data-time-part="minute" data-value="${v}" ${disabled?'disabled':''}>${v}</button>`;
+            }).join('');
+
+            meridiem.innerHTML = ['AM','PM'].map(v => {
+                const disabled=meridiemDisabled(v);
+                return `<button type="button" class="time-picker-option ${draftTime.meridiem===v?'selected ':''}${disabled?'disabled':''}" data-time-part="meridiem" data-value="${v}" ${disabled?'disabled':''}>${v}</button>`;
+            }).join('');
         }
 
         function openTimePicker(target) {
             activeTimeTarget = target;
             const value = document.getElementById(`schedule-${target}`)?.value || '';
-            const minutes = parseTime(value);
+            let minutes = parseTime(value);
+
+            if (target === 'end') {
+                const startMinutes = getStartTimeMinutes();
+                if (Number.isFinite(startMinutes) && (!Number.isFinite(minutes) || minutes <= startMinutes)) {
+                    minutes = startMinutes + 1;
+                    if (minutes > 1439) minutes = 1439;
+                    const hidden = document.getElementById('schedule-end');
+                    if (hidden) hidden.value = '';
+                }
+            }
+
             if (Number.isFinite(minutes)) {
                 const h = Math.floor(minutes / 60);
                 draftTime.hour = String((h % 12) || 12).padStart(2,'0');
@@ -2004,6 +2202,13 @@
 
         function commitTimePicker() {
             if (!activeTimeTarget) return;
+            const selectedMinutes = getDraftTimeMinutes();
+
+            if (activeTimeTarget === 'end' && !isEndTimeAllowed(selectedMinutes)) {
+                showToast('End time must be after start time.');
+                return;
+            }
+
             let h = Number(draftTime.hour) % 12;
             if (draftTime.meridiem === 'PM') h += 12;
             const value = `${String(h).padStart(2,'0')}:${draftTime.minute}`;
@@ -2011,10 +2216,21 @@
             const display = document.getElementById(`schedule-${activeTimeTarget}-display`);
             if (hidden) hidden.value = value;
             if (display) display.textContent = `${draftTime.hour}:${draftTime.minute} ${draftTime.meridiem}`;
+
+            if (activeTimeTarget === 'start') {
+                const endMinutes = parseTime(document.getElementById('schedule-end')?.value || '');
+                if (Number.isFinite(endMinutes) && endMinutes <= selectedMinutes) {
+                    const endHidden = document.getElementById('schedule-end');
+                    const endDisplay = document.getElementById('schedule-end-display');
+                    if (endHidden) endHidden.value = '';
+                    if (endDisplay) endDisplay.textContent = 'Select time';
+                }
+            }
             closeTimePicker();
         }
 
         function openTimetableModal() {
+            timetableModalTrigger = document.activeElement;
             const backdrop = document.getElementById('timetable-modal-backdrop');
             document.getElementById('timetable-form')?.reset();
             document.querySelectorAll('.day-choice input').forEach(x => x.checked = false);
@@ -2035,8 +2251,75 @@
         function closeTimetableModal() {
             closeTimePicker();
             const backdrop = document.getElementById('timetable-modal-backdrop');
+
+            if (timetableModalTrigger && typeof timetableModalTrigger.focus === 'function') {
+                timetableModalTrigger.focus();
+            } else if (document.activeElement && backdrop?.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+
             backdrop?.classList.remove('open');
             backdrop?.setAttribute('aria-hidden','true');
+            timetableModalTrigger = null;
+        }
+
+        function showImportConfirm() {
+            return new Promise(resolve => {
+                const backdrop = document.getElementById('import-confirm-backdrop');
+                const cancelBtn = document.getElementById('import-confirm-cancel');
+                const okBtn = document.getElementById('import-confirm-ok');
+
+                if (!backdrop || !cancelBtn || !okBtn) {
+                    resolve(false);
+                    return;
+                }
+
+                const previousFocus = document.activeElement;
+                let finished = false;
+
+                backdrop.classList.add('open');
+                backdrop.setAttribute('aria-hidden', 'false');
+
+                const finish = result => {
+                    if (finished) return;
+                    finished = true;
+
+                    backdrop.classList.remove('open');
+
+                    // Move focus out before hiding the modal from assistive technology.
+                    if (previousFocus && typeof previousFocus.focus === 'function') {
+                        previousFocus.focus();
+                    } else if (document.activeElement && backdrop.contains(document.activeElement)) {
+                        document.activeElement.blur();
+                    }
+
+                    backdrop.setAttribute('aria-hidden', 'true');
+                    cancelBtn.removeEventListener('click', onCancel);
+                    okBtn.removeEventListener('click', onOk);
+                    backdrop.removeEventListener('click', onBackdrop);
+                    document.removeEventListener('keydown', onKeyDown);
+                    resolve(result);
+                };
+
+                const onCancel = () => finish(false);
+                const onOk = () => finish(true);
+                const onBackdrop = event => {
+                    if (event.target === backdrop) finish(false);
+                };
+                const onKeyDown = event => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        finish(false);
+                    }
+                };
+
+                cancelBtn.addEventListener('click', onCancel);
+                okBtn.addEventListener('click', onOk);
+                backdrop.addEventListener('click', onBackdrop);
+                document.addEventListener('keydown', onKeyDown);
+
+                setTimeout(() => okBtn.focus(), 0);
+            });
         }
 
         function handleTimetableForm(event) {
@@ -2144,7 +2427,10 @@
                     throw new Error(result.errors[0]);
                 }
 
-                if (hasScheduleData() && !confirm('This will replace your current timetable with the imported one. Continue?')) return;
+                if (hasScheduleData()) {
+                    const shouldImport = await showImportConfirm();
+                    if (!shouldImport) return;
+                }
 
                 const imported = [];
                 result.normalized.forEach(row => {
@@ -2532,18 +2818,6 @@
                     <label for="schedule-name">Subject / topic</label>
                     <input class="form-control" id="schedule-name" placeholder="Enter subject or topic name" maxlength="100" required>
                 </div>
-                <div class="form-group" id="schedule-days-group">
-                    <label>Days</label>
-                    <div class="day-picker">
-                        <label class="day-choice"><input type="checkbox" value="Monday"><span>Mon</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Tuesday"><span>Tue</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Wednesday"><span>Wed</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Thursday"><span>Thu</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Friday"><span>Fri</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Saturday"><span>Sat</span></label>
-                        <label class="day-choice"><input type="checkbox" value="Sunday"><span>Sun</span></label>
-                    </div>
-                </div>
                 <div class="time-fields">
                     <div class="form-group">
                         <label>Start</label>
@@ -2577,11 +2851,41 @@
                         <label class="repeat-option"><input type="radio" name="schedule-type" value="permanent" checked><span>Permanent</span></label>
                     </div>
                 </div>
+                <div class="form-group" id="schedule-days-group">
+                    <label>Days</label>
+                    <div class="day-picker">
+                        <label class="day-choice"><input type="checkbox" value="Monday"><span>Mon</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Tuesday"><span>Tue</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Wednesday"><span>Wed</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Thursday"><span>Thu</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Friday"><span>Fri</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Saturday"><span>Sat</span></label>
+                        <label class="day-choice"><input type="checkbox" value="Sunday"><span>Sun</span></label>
+                    </div>
+                </div>
                 <div class="modal-actions">
                     <button class="modal-btn secondary" id="timetable-modal-cancel" type="button">Cancel</button>
                     <button class="modal-btn primary" type="submit">Save class</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="confirm-backdrop" id="import-confirm-backdrop" aria-hidden="true">
+        <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="import-confirm-title">
+            <div class="confirm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v12"></path>
+                    <path d="m7 10 5 5 5-5"></path>
+                    <path d="M5 21h14"></path>
+                </svg>
+            </div>
+            <h3 id="import-confirm-title">Replace timetable?</h3>
+            <p>This will replace your current timetable with the imported one. Your existing timetable will be overwritten.</p>
+            <div class="confirm-actions">
+                <button type="button" class="confirm-btn cancel" id="import-confirm-cancel">Cancel</button>
+                <button type="button" class="confirm-btn confirm" id="import-confirm-ok">Continue</button>
+            </div>
         </div>
     </div>
 
